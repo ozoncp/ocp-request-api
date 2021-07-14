@@ -1,0 +1,1 @@
+module "github.com/ozoncp/ocp-request-api"
