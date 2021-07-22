@@ -1,9 +1,11 @@
 package utils
 
-import "math"
+import (
+	"math"
+)
 
-// Converts a given slice of ints to a slice of slices of ints of a given size.
-func ChunkedInt(items []int, chunkSize int) [][]int {
+// SplitToBulksInt Converts a given slice of ints to a slice of slices of ints of a given size.
+func SplitToBulksInt(items []int, chunkSize int) [][]int {
 	if chunkSize <= 0 {
 		return make([][]int, 0)
 	}
@@ -23,7 +25,7 @@ func ChunkedInt(items []int, chunkSize int) [][]int {
 	return ret
 }
 
-// Converts mapping to a reversed mapping (a map where key becomes a value and vice-versa).
+// ReverseMapIntToInt Converts mapping to a reversed mapping (a map where key becomes a value and vice-versa).
 func ReverseMapIntToInt(mapping map[int]int) map[int]int {
 	reversed := make(map[int]int, len(mapping))
 
@@ -33,7 +35,7 @@ func ReverseMapIntToInt(mapping map[int]int) map[int]int {
 	return reversed
 }
 
-// Return a new slice with elements in the `items` that are not in the `remove` slice.
+// RemoveElementsInt Return a new slice with elements in the `items` that are not in the `remove` slice.
 func RemoveElementsInt(items []int, remove []int) []int {
 	removeSet := make(map[int]bool, len(remove))
 	ret := make([]int, 0, len(items))
