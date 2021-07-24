@@ -15,6 +15,7 @@ func NewRequest(id, userId, typeOfRequest uint64, text string) Request {
 	return Request{Id: id, UserId: userId, Type: typeOfRequest, Text: text}
 }
 
+// String() returns Request's human readable representation
 func (r Request) String() string {
 	return fmt.Sprintf("Request{%v, %v, %v, %v}", r.Id, r.UserId, r.Type, r.Text)
 }
