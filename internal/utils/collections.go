@@ -5,19 +5,20 @@ import (
 )
 
 // SplitToBulksInt Converts a given slice of ints to a slice of slices of ints of a given size.
-func SplitToBulksInt(items []int, chunkSize int) [][]int {
+func SplitToBulksInt(items []int, chunkSize uint) [][]int {
 	if chunkSize <= 0 {
 		return make([][]int, 0)
 	}
 
+	itemsLen := uint(len(items))
 	chunksNum := int(math.Ceil(float64(len(items)) / float64(chunkSize)))
 
 	ret := make([][]int, 0, chunksNum)
 
-	for chunkStart := 0; chunkStart < len(items); chunkStart = chunkStart + chunkSize {
+	for chunkStart := uint(0); chunkStart < itemsLen; chunkStart = chunkStart + chunkSize {
 		chunkEnd := chunkStart + chunkSize
-		if chunkEnd > len(items) {
-			chunkEnd = len(items)
+		if chunkEnd > itemsLen {
+			chunkEnd = itemsLen
 		}
 
 		ret = append(ret, items[chunkStart:chunkEnd])
