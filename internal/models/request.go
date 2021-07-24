@@ -2,6 +2,7 @@ package models
 
 import "fmt"
 
+// Request student's request information
 type Request struct {
 	Id     uint64
 	UserId uint64
@@ -10,13 +11,8 @@ type Request struct {
 }
 
 // NewRequest create new Request instance
-func NewRequest(Id uint64, UserId uint64, Type uint64, Text string) *Request {
-	r := new(Request)
-	r.Id = Id
-	r.UserId = UserId
-	r.Type = Type
-	r.Text = Text
-	return r
+func NewRequest(id, userId, typeOfRequest uint64, text string) Request {
+	return Request{Id: id, UserId: userId, Type: typeOfRequest, Text: text}
 }
 
 func (r Request) String() string {
