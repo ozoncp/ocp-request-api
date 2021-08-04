@@ -28,19 +28,14 @@ type flusher struct {
 }
 
 // Flush stores a slice of Requests to the underlying repository. It makes requests by chunks of a certain size.
-// If number of items in the last chunk is less than Flusher's chunk size this will not be stored,
-// but returned as method result.
+// It's returns a slice of Requests that it's failed to write.
 func (f *flusher) Flush(requests []models.Request) ([]models.Request, error) {
 	var err error
 	remains := make([]models.Request, 0, f.chunkSize)
 	for ix, chunk := range utils.SplitToBulks(requests, f.chunkSize) {
-		if len(chunk) == int(f.chunkSize) {
-			if err = f.requestRepo.Add(chunk); err != nil {
-				remains = append(remains, requests[ix*int(f.chunkSize):]...)
-				return remains, err // partially added
-			}
-		} else { // last chunk that still should be kept in buffer
-			remains = append(remains, chunk...)
+		if err = f.requestRepo.Add(chunk); err != nil {
+			remains = append(remains, requests[ix*int(f.chunkSize):]...)
+			return remains, err // partially added
 		}
 	}
 	return remains, nil

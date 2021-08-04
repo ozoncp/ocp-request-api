@@ -27,12 +27,12 @@ var _ = Describe("Flusher", func() {
 		mockCtrl.Finish()
 	})
 
-	Context("Adding items with no errors", func() {
+	Context("Adding items with no errors. Will not return any remains.", func() {
 		JustBeforeEach(func() {
 			fl = flusher.NewFlusher(2, mockRepo)
 		})
 
-		It("Added all batches with a single call to repo. No remains left.", func() {
+		It("Added all batches with a single call to repo.", func() {
 			mockRepo.EXPECT().
 				Add(gomock.Any()).
 				Return(nil).
@@ -48,7 +48,7 @@ var _ = Describe("Flusher", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		It("Added all batches with a 2 calls against repo. No remains left.", func() {
+		It("Added all batches with a 2 calls against repo.", func() {
 			mockRepo.EXPECT().
 				Add(gomock.Any()).
 				Return(nil).
@@ -69,8 +69,8 @@ var _ = Describe("Flusher", func() {
 			mockRepo.EXPECT().
 				Add(gomock.Any()).
 				Return(nil).
-				MaxTimes(2).
-				MinTimes(2)
+				MaxTimes(3).
+				MinTimes(3)
 
 			remains, err := fl.Flush([]models.Request{
 				{1, 2, 3, ""},
@@ -79,7 +79,7 @@ var _ = Describe("Flusher", func() {
 				{4, 2, 3, ""},
 				{5, 2, 3, ""},
 			})
-			Expect(remains).To(Equal([]models.Request{{5, 2, 3, ""}}))
+			Expect(remains).To(HaveLen(0))
 			Expect(err).ToNot(HaveOccurred())
 
 		})
