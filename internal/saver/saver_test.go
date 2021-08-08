@@ -93,6 +93,13 @@ var _ = Describe("Saver", func() {
 				MaxTimes(1).
 				MinTimes(1)
 
+			// we may pass an empty requests while sleeping
+			mockFlusher.EXPECT().
+				Flush([]models.Request{}).
+				Return(nil, nil).
+				MinTimes(0).
+				MaxTimes(3)
+
 			for _, req := range requests[:5] {
 				sav.Save(req)
 			}
@@ -125,6 +132,11 @@ var _ = Describe("Saver", func() {
 		})
 
 		It("Cannot Save() after Close()", func() {
+			mockFlusher.EXPECT().
+				Flush([]models.Request{}).
+				Return(nil, nil).
+				MaxTimes(1)
+
 			sav.Init()
 			sav.Close()
 			Expect(func() {
@@ -133,6 +145,11 @@ var _ = Describe("Saver", func() {
 		})
 
 		It("Cannot Init() after Close()", func() {
+			mockFlusher.EXPECT().
+				Flush([]models.Request{}).
+				Return(nil, nil).
+				MaxTimes(1)
+
 			sav.Init()
 			sav.Close()
 			Expect(func() {

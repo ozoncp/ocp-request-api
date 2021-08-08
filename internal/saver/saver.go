@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	inited = iota + 1
-	closed
+	inited = 0b01
+	closed = 0b10
 )
 
 // Saver instance saves Request into underlying storage.
@@ -67,18 +67,20 @@ func (s *saver) Init() {
 
 	go func() {
 		requests := make([]models.Request, 0, s.capacity)
+		defer s.wait.Done()
 		for {
 			select {
 			case req, ok := <-s.flushQueue:
 				if !ok {
-					requests = s.flush(requests)
-					s.wait.Done()
+					s.flush(requests)
+					requests = requests[:0]
 					return
 				} else {
 					requests = append(requests, req)
 				}
 			case <-ticker.C:
-				requests = s.flush(requests)
+				s.flush(requests)
+				requests = requests[:0]
 			}
 		}
 
@@ -98,16 +100,11 @@ func (s *saver) Close() {
 	s.wait.Wait()
 }
 
-// flushes a slice of Requests and makes a new empty slice with a certain capacity
-func (s *saver) flush(requests []models.Request) []models.Request {
-	if len(requests) == 0 {
-		return requests
-	}
-
+// flushes a slice of Requests
+func (s *saver) flush(requests []models.Request) {
 	if failedToFlushReq, err := s.flusher.Flush(requests); err != nil {
 		log.Printf("failed to save %v requests: %v", len(failedToFlushReq), err)
 	}
-	return make([]models.Request, 0, s.capacity)
 }
 
 func (s *saver) mustNotBeClosed() {
