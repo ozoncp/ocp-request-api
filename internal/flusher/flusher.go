@@ -31,6 +31,10 @@ type flusher struct {
 // It's returns a slice of Requests that it's failed to write.
 func (f *flusher) Flush(requests []models.Request) ([]models.Request, error) {
 	var err error
+	if len(requests) == 0 {
+		return requests, nil
+	}
+
 	remains := make([]models.Request, 0, f.chunkSize)
 	for ix, chunk := range utils.SplitToBulks(requests, f.chunkSize) {
 		if err = f.requestRepo.Add(chunk); err != nil {
