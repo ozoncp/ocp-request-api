@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
+
+package ocp.task.api;
+
+option go_package = "github.com/ozoncp/ocp-request-api/pkg/ocp-request-api;ocp_request_api";
+
+// CRUD service to manipulate user Requests
+service OcpRequestApi {
+
+  // ListRequestV1 returns a list of user Requests.
+  rpc ListRequestV1(ListRequestsV1Request) returns (ListRequestsV1Response) {
+    option (google.api.http) = {
+      get: "/v1/requests"
+    };
+  }
+
+  // DescribeTaskV1 returns detailed information of a given Request.
+  rpc DescribeTaskV1(DescribeRequestV1Request) returns (DescribeTaskV1Response) {
+    option (google.api.http) = {
+      get: "/v1/requests/{request_id}"
+    };
+  }
+
+  // CreateRequestV1 creates new request. Returns id of created object.
+  rpc CreateRequestV1(CreateRequestV1Request) returns (CreateRequestV1Response) {
+    option (google.api.http) = {
+      post: "/v1/requests"
+      body: "*"
+    };
+  }
+
+  // RemoveRequestV1 removes user request by a its by.
+  // Returns a bool flag indicating if object actually existed and hence removed.
+  rpc RemoveRequestV1(RemoveRequestV1Request) returns (RemoveRequestV1Response) {
+    option (google.api.http) = {
+      delete: "/v1/requests/{request_id}"
+    };
+  }
+}
+
+// ListRequestsV1Request controls a size and offset of ListRequestV1
+message ListRequestsV1Request {
+  uint64 limit = 1 [(validate.rules).uint64 = {gt: 0, lte: 10000}];
+  uint64 offset = 2 [(validate.rules).uint64.gte = 0];
+}
+
+// A result of ListRequestV1. Contains a list of Requests,
+message ListRequestsV1Response {
+  repeated Request requests = 1;
+}
+
+
+// Contains attributes values of the new Request object.
+message CreateRequestV1Request {
+  uint64 user_id = 1 [(validate.rules).uint64.gt = 0];
+  uint64 type = 2;
+  string text = 3;
+}
+
+
+// Contains id of the newly created Request.
+message CreateRequestV1Response {
+  uint64 request_id = 1;
+}
+
+// Request id to be removed
+message RemoveRequestV1Request {
+  uint64 request_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+// Indicates whether request exited and removed.
+message RemoveRequestV1Response {
+  bool found = 1;
+}
+
+// Request id to fetch detailed information.
+message DescribeRequestV1Request {
+  uint64 request_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+// Detailed information of the Request
+message DescribeTaskV1Response {
+  Request request = 1;
+}
+
+
+message Request {
+  uint64 id = 1;
+  uint64 user_id = 2;
+  uint64 type = 3;
+  string text = 4;
+}
