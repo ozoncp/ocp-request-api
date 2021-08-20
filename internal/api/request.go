@@ -12,23 +12,23 @@ import (
 )
 
 // NewRequestApi creates Request API instance
-func NewRequestApi() *RequestAPI {
-	return &RequestAPI{}
+func NewRequestApi(r repository.Repo) *RequestAPI {
+	return &RequestAPI{repo: r}
 }
 
 type RequestAPI struct {
 	desc.UnimplementedOcpRequestApiServer
+	repo repository.Repo
 }
 
 // ListRequestV1 returns a list of user Requests
 func (r *RequestAPI) ListRequestV1(ctx context.Context, req *desc.ListRequestsV1Request) (*desc.ListRequestsV1Response, error) {
 	log.Printf("Got list request: %v", req)
 
-	repo := repository.FromContext(ctx)
 	if err := req.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-	reqs, err := repo.List(ctx, req.Limit, req.Offset)
+	reqs, err := r.repo.List(ctx, req.Limit, req.Offset)
 
 	if err != nil {
 		log.Error().Msgf("Request %v failed with %v", req, err)
@@ -57,9 +57,7 @@ func (r *RequestAPI) DescribeRequestV1(ctx context.Context, req *desc.DescribeRe
 	if err := req.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-	repo := repository.FromContext(ctx)
-
-	ret, err := repo.Describe(ctx, req.RequestId)
+	ret, err := r.repo.Describe(ctx, req.RequestId)
 
 	if errors.Is(err, repository.NotFound) {
 		return nil, status.Error(codes.NotFound, err.Error())
@@ -92,8 +90,7 @@ func (r *RequestAPI) CreateRequestV1(ctx context.Context, req *desc.CreateReques
 		req.Text,
 	)
 
-	repo := repository.FromContext(ctx)
-	if newId, err := repo.Add(ctx, newReq); err != nil {
+	if newId, err := r.repo.Add(ctx, newReq); err != nil {
 		log.Error().Msgf("Request %v failed with %v", req, err)
 		return nil, err
 	} else {
@@ -109,8 +106,7 @@ func (r *RequestAPI) RemoveRequestV1(ctx context.Context, req *desc.RemoveReques
 	if err := req.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-	repo := repository.FromContext(ctx)
-	if found, err := repo.Remove(ctx, req.RequestId); err != nil {
+	if found, err := r.repo.Remove(ctx, req.RequestId); err != nil {
 		log.Error().Msgf("Request %v failed with %v", req, err)
 		return nil, err
 	} else {

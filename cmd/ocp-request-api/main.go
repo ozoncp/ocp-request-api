@@ -27,10 +27,8 @@ func run(database *sql.DB) error {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(repo.NewInterceptorWithRepo(repo.NewRepo(database))),
-	)
-	desc.RegisterOcpRequestApiServer(s, api.NewRequestApi())
+	s := grpc.NewServer()
+	desc.RegisterOcpRequestApiServer(s, api.NewRequestApi(repo.NewRepo(database)))
 
 	if err := s.Serve(listen); err != nil {
 		log.Fatalf("failed to serve: %v", err)

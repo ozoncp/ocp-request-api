@@ -26,7 +26,7 @@ var _ = Describe("Flusher", func() {
 	BeforeEach(func() {
 		mockCtrl = gomock.NewController(GinkgoT())
 		mockRepo = mocks.NewMockRepo(mockCtrl)
-		ctx = repo.NewContext(context.Background(), mockRepo)
+		ctx = context.Background()
 	})
 
 	AfterEach(func() {
@@ -35,8 +35,8 @@ var _ = Describe("Flusher", func() {
 
 	Context("Add new item and return its id", func() {
 		JustBeforeEach(func() {
-			requestApi = api.NewRequestApi()
-			ctx = repo.NewContext(context.Background(), mockRepo)
+			requestApi = api.NewRequestApi(mockRepo)
+			ctx = context.Background()
 		})
 
 		It("Add request with no error", func() {
