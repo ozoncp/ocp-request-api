@@ -4,6 +4,7 @@ import (
 	"context"
 	sql "github.com/jmoiron/sqlx"
 	"github.com/ozoncp/ocp-request-api/internal/db"
+	"github.com/ozoncp/ocp-request-api/internal/repo"
 	"log"
 	"net"
 	"net/http"
@@ -26,7 +27,9 @@ func run(database *sql.DB) error {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer(grpc.ChainUnaryInterceptor(db.NewInterceptorWithDB(database)))
+	s := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(repo.NewInterceptorWithRepo(repo.NewRepo(database))),
+	)
 	desc.RegisterOcpRequestApiServer(s, api.NewRequestApi())
 
 	if err := s.Serve(listen); err != nil {

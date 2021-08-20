@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"errors"
-	db2 "github.com/ozoncp/ocp-request-api/internal/db"
 	"github.com/ozoncp/ocp-request-api/internal/models"
 	repository "github.com/ozoncp/ocp-request-api/internal/repo"
 	desc "github.com/ozoncp/ocp-request-api/pkg/ocp-request-api"
@@ -21,17 +20,12 @@ type RequestAPI struct {
 	desc.UnimplementedOcpRequestApiServer
 }
 
-func repoFromContext(ctx context.Context) repository.Repo {
-	db := db2.FromContext(ctx)
-	return repository.NewRepo(db)
-}
-
 // ListRequestV1 returns a list of user Requests
 func (r *RequestAPI) ListRequestV1(ctx context.Context, req *desc.ListRequestsV1Request) (*desc.ListRequestsV1Response, error) {
 	log.Printf("Got list request: %v", req)
-	repo := repoFromContext(ctx)
+	repo := repository.FromContext(ctx)
 	if err := req.Validate(); err != nil {
-		return nil, err
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 	reqs, err := repo.List(ctx, req.Limit, req.Offset)
 
@@ -60,9 +54,9 @@ func (r *RequestAPI) DescribeTaskV1(ctx context.Context, req *desc.DescribeReque
 	log.Printf("Got describe request: %v", req)
 
 	if err := req.Validate(); err != nil {
-		return nil, err
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-	repo := repoFromContext(ctx)
+	repo := repository.FromContext(ctx)
 
 	ret, err := repo.Describe(ctx, req.RequestId)
 
@@ -86,7 +80,7 @@ func (r *RequestAPI) DescribeTaskV1(ctx context.Context, req *desc.DescribeReque
 func (r *RequestAPI) CreateRequestV1(ctx context.Context, req *desc.CreateRequestV1Request) (*desc.CreateRequestV1Response, error) {
 	log.Printf("Got create request: %v", req)
 	if err := req.Validate(); err != nil {
-		return nil, err
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	newReq := models.NewRequest(
@@ -96,7 +90,7 @@ func (r *RequestAPI) CreateRequestV1(ctx context.Context, req *desc.CreateReques
 		req.Text,
 	)
 
-	repo := repoFromContext(ctx)
+	repo := repository.FromContext(ctx)
 	if newId, err := repo.Add(ctx, newReq); err != nil {
 		return nil, err
 	} else {
@@ -110,9 +104,9 @@ func (r *RequestAPI) CreateRequestV1(ctx context.Context, req *desc.CreateReques
 func (r *RequestAPI) RemoveRequestV1(ctx context.Context, req *desc.RemoveRequestV1Request) (*desc.RemoveRequestV1Response, error) {
 	log.Printf("Got remove request: %v", req)
 	if err := req.Validate(); err != nil {
-		return nil, err
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-	repo := repoFromContext(ctx)
+	repo := repository.FromContext(ctx)
 	if found, err := repo.Remove(ctx, req.RequestId); err != nil {
 		return nil, err
 	} else {
