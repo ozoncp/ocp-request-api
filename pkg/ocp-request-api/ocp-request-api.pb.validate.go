@@ -560,17 +560,17 @@ var _ interface {
 	ErrorName() string
 } = DescribeRequestV1RequestValidationError{}
 
-// Validate checks the field values on DescribeTaskV1Response with the rules
+// Validate checks the field values on DescribeRequestV1Response with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
-func (m *DescribeTaskV1Response) Validate() error {
+func (m *DescribeRequestV1Response) Validate() error {
 	if m == nil {
 		return nil
 	}
 
 	if v, ok := interface{}(m.GetRequest()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return DescribeTaskV1ResponseValidationError{
+			return DescribeRequestV1ResponseValidationError{
 				field:  "Request",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -581,9 +581,9 @@ func (m *DescribeTaskV1Response) Validate() error {
 	return nil
 }
 
-// DescribeTaskV1ResponseValidationError is the validation error returned by
-// DescribeTaskV1Response.Validate if the designated constraints aren't met.
-type DescribeTaskV1ResponseValidationError struct {
+// DescribeRequestV1ResponseValidationError is the validation error returned by
+// DescribeRequestV1Response.Validate if the designated constraints aren't met.
+type DescribeRequestV1ResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -591,24 +591,24 @@ type DescribeTaskV1ResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e DescribeTaskV1ResponseValidationError) Field() string { return e.field }
+func (e DescribeRequestV1ResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e DescribeTaskV1ResponseValidationError) Reason() string { return e.reason }
+func (e DescribeRequestV1ResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e DescribeTaskV1ResponseValidationError) Cause() error { return e.cause }
+func (e DescribeRequestV1ResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e DescribeTaskV1ResponseValidationError) Key() bool { return e.key }
+func (e DescribeRequestV1ResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e DescribeTaskV1ResponseValidationError) ErrorName() string {
-	return "DescribeTaskV1ResponseValidationError"
+func (e DescribeRequestV1ResponseValidationError) ErrorName() string {
+	return "DescribeRequestV1ResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e DescribeTaskV1ResponseValidationError) Error() string {
+func (e DescribeRequestV1ResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -620,14 +620,14 @@ func (e DescribeTaskV1ResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sDescribeTaskV1Response.%s: %s%s",
+		"invalid %sDescribeRequestV1Response.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = DescribeTaskV1ResponseValidationError{}
+var _ error = DescribeRequestV1ResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -635,7 +635,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = DescribeTaskV1ResponseValidationError{}
+} = DescribeRequestV1ResponseValidationError{}
 
 // Validate checks the field values on Request with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.

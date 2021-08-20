@@ -18,7 +18,7 @@ service OcpRequestApi {
   }
 
   // DescribeTaskV1 returns detailed information of a given Request.
-  rpc DescribeTaskV1(DescribeRequestV1Request) returns (DescribeTaskV1Response) {
+  rpc DescribeRequestV1(DescribeRequestV1Request) returns (DescribeRequestV1Response) {
     option (google.api.http) = {
       get: "/v1/requests/{request_id}"
     };
@@ -82,7 +82,7 @@ message DescribeRequestV1Request {
 }
 
 // Detailed information of the Request
-message DescribeTaskV1Response {
+message DescribeRequestV1Response {
   Request request = 1;
 }
 

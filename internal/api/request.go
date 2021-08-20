@@ -23,6 +23,7 @@ type RequestAPI struct {
 // ListRequestV1 returns a list of user Requests
 func (r *RequestAPI) ListRequestV1(ctx context.Context, req *desc.ListRequestsV1Request) (*desc.ListRequestsV1Response, error) {
 	log.Printf("Got list request: %v", req)
+
 	repo := repository.FromContext(ctx)
 	if err := req.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
@@ -30,6 +31,7 @@ func (r *RequestAPI) ListRequestV1(ctx context.Context, req *desc.ListRequestsV1
 	reqs, err := repo.List(ctx, req.Limit, req.Offset)
 
 	if err != nil {
+		log.Error().Msgf("Request %v failed with %v", req, err)
 		return nil, err
 	}
 
@@ -43,14 +45,13 @@ func (r *RequestAPI) ListRequestV1(ctx context.Context, req *desc.ListRequestsV1
 			Text:   r.Text,
 		})
 	}
-
 	return &desc.ListRequestsV1Response{
 		Requests: ret,
 	}, nil
 }
 
-// DescribeTaskV1 returns detailed Request information by its ID
-func (r *RequestAPI) DescribeTaskV1(ctx context.Context, req *desc.DescribeRequestV1Request) (*desc.DescribeTaskV1Response, error) {
+// DescribeRequestV1 returns detailed Request information by its ID
+func (r *RequestAPI) DescribeRequestV1(ctx context.Context, req *desc.DescribeRequestV1Request) (*desc.DescribeRequestV1Response, error) {
 	log.Printf("Got describe request: %v", req)
 
 	if err := req.Validate(); err != nil {
@@ -63,10 +64,11 @@ func (r *RequestAPI) DescribeTaskV1(ctx context.Context, req *desc.DescribeReque
 	if errors.Is(err, repository.NotFound) {
 		return nil, status.Error(codes.NotFound, err.Error())
 	} else if err != nil {
+		log.Error().Msgf("Request %v failed with %v", req, err)
 		return nil, err
 	}
 
-	return &desc.DescribeTaskV1Response{
+	return &desc.DescribeRequestV1Response{
 		Request: &desc.Request{
 			Id:     ret.Id,
 			UserId: ret.UserId,
@@ -92,6 +94,7 @@ func (r *RequestAPI) CreateRequestV1(ctx context.Context, req *desc.CreateReques
 
 	repo := repository.FromContext(ctx)
 	if newId, err := repo.Add(ctx, newReq); err != nil {
+		log.Error().Msgf("Request %v failed with %v", req, err)
 		return nil, err
 	} else {
 		return &desc.CreateRequestV1Response{
@@ -108,6 +111,7 @@ func (r *RequestAPI) RemoveRequestV1(ctx context.Context, req *desc.RemoveReques
 	}
 	repo := repository.FromContext(ctx)
 	if found, err := repo.Remove(ctx, req.RequestId); err != nil {
+		log.Error().Msgf("Request %v failed with %v", req, err)
 		return nil, err
 	} else {
 		return &desc.RemoveRequestV1Response{

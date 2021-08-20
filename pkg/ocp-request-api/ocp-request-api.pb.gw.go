@@ -69,7 +69,7 @@ func local_request_OcpRequestApi_ListRequestV1_0(ctx context.Context, marshaler 
 
 }
 
-func request_OcpRequestApi_DescribeTaskV1_0(ctx context.Context, marshaler runtime.Marshaler, client OcpRequestApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_OcpRequestApi_DescribeRequestV1_0(ctx context.Context, marshaler runtime.Marshaler, client OcpRequestApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq DescribeRequestV1Request
 	var metadata runtime.ServerMetadata
 
@@ -91,12 +91,12 @@ func request_OcpRequestApi_DescribeTaskV1_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "request_id", err)
 	}
 
-	msg, err := client.DescribeTaskV1(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.DescribeRequestV1(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_OcpRequestApi_DescribeTaskV1_0(ctx context.Context, marshaler runtime.Marshaler, server OcpRequestApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_OcpRequestApi_DescribeRequestV1_0(ctx context.Context, marshaler runtime.Marshaler, server OcpRequestApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq DescribeRequestV1Request
 	var metadata runtime.ServerMetadata
 
@@ -118,7 +118,7 @@ func local_request_OcpRequestApi_DescribeTaskV1_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "request_id", err)
 	}
 
-	msg, err := server.DescribeTaskV1(ctx, &protoReq)
+	msg, err := server.DescribeRequestV1(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -240,7 +240,7 @@ func RegisterOcpRequestApiHandlerServer(ctx context.Context, mux *runtime.ServeM
 
 	})
 
-	mux.Handle("GET", pattern_OcpRequestApi_DescribeTaskV1_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_OcpRequestApi_DescribeRequestV1_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -251,7 +251,7 @@ func RegisterOcpRequestApiHandlerServer(ctx context.Context, mux *runtime.ServeM
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_OcpRequestApi_DescribeTaskV1_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_OcpRequestApi_DescribeRequestV1_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -259,7 +259,7 @@ func RegisterOcpRequestApiHandlerServer(ctx context.Context, mux *runtime.ServeM
 			return
 		}
 
-		forward_OcpRequestApi_DescribeTaskV1_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_OcpRequestApi_DescribeRequestV1_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -370,7 +370,7 @@ func RegisterOcpRequestApiHandlerClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
-	mux.Handle("GET", pattern_OcpRequestApi_DescribeTaskV1_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_OcpRequestApi_DescribeRequestV1_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -379,14 +379,14 @@ func RegisterOcpRequestApiHandlerClient(ctx context.Context, mux *runtime.ServeM
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_OcpRequestApi_DescribeTaskV1_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_OcpRequestApi_DescribeRequestV1_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_OcpRequestApi_DescribeTaskV1_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_OcpRequestApi_DescribeRequestV1_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -436,7 +436,7 @@ func RegisterOcpRequestApiHandlerClient(ctx context.Context, mux *runtime.ServeM
 var (
 	pattern_OcpRequestApi_ListRequestV1_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "requests"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_OcpRequestApi_DescribeTaskV1_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "requests", "request_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_OcpRequestApi_DescribeRequestV1_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "requests", "request_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_OcpRequestApi_CreateRequestV1_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "requests"}, "", runtime.AssumeColonVerbOpt(true)))
 
@@ -446,7 +446,7 @@ var (
 var (
 	forward_OcpRequestApi_ListRequestV1_0 = runtime.ForwardResponseMessage
 
-	forward_OcpRequestApi_DescribeTaskV1_0 = runtime.ForwardResponseMessage
+	forward_OcpRequestApi_DescribeRequestV1_0 = runtime.ForwardResponseMessage
 
 	forward_OcpRequestApi_CreateRequestV1_0 = runtime.ForwardResponseMessage
 

@@ -84,12 +84,12 @@
     "/v1/requests/{request_id}": {
       "get": {
         "summary": "DescribeTaskV1 returns detailed information of a given Request.",
-        "operationId": "OcpRequestApi_DescribeTaskV1",
+        "operationId": "OcpRequestApi_DescribeRequestV1",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/apiDescribeTaskV1Response"
+              "$ref": "#/definitions/apiDescribeRequestV1Response"
             }
           },
           "default": {
@@ -172,7 +172,7 @@
       },
       "description": "Contains id of the newly created Request."
     },
-    "apiDescribeTaskV1Response": {
+    "apiDescribeRequestV1Response": {
       "type": "object",
       "properties": {
         "request": {
