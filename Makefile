@@ -22,8 +22,8 @@ build: vendor-proto .generate .build
 		rm -rf pkg/ocp-request-api/github.com
 		mkdir -p cmd/ocp-request-api
 
-.PHONY: .mockgen
-.mockgen:
+.PHONY: mockgen
+mockgen:
 		go generate internal/mockgen.go
 
 .PHONY: .build
