@@ -18,6 +18,10 @@ build: vendor-proto .generate .build
 		rm -rf pkg/ocp-request-api/github.com
 		mkdir -p cmd/ocp-request-api
 
+.PHONY: .mockgen
+.mockgen:
+		go generate internal/mockgen.go
+
 .PHONY: .build
 .build:
 		CGO_ENABLED=0 GOOS=linux go build -o bin/ocp-request-api cmd/ocp-request-api/main.go

@@ -1,6 +1,7 @@
 package flusher_test
 
 import (
+	"context"
 	"errors"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -16,11 +17,13 @@ var _ = Describe("Flusher", func() {
 		fl       flusher.Flusher
 		mockRepo *mocks.MockRepo
 		mockCtrl *gomock.Controller
+		ctx      context.Context
 	)
 
 	BeforeEach(func() {
 		mockCtrl = gomock.NewController(GinkgoT())
 		mockRepo = mocks.NewMockRepo(mockCtrl)
+		ctx = context.Background()
 	})
 
 	AfterEach(func() {
@@ -34,12 +37,12 @@ var _ = Describe("Flusher", func() {
 
 		It("Added all batches with a single call to repo.", func() {
 			mockRepo.EXPECT().
-				Add(gomock.Any()).
+				Add(ctx, gomock.Any()).
 				Return(nil).
 				MaxTimes(1).
 				MinTimes(1)
 
-			remains, err := fl.Flush([]models.Request{
+			remains, err := fl.Flush(ctx, []models.Request{
 				{1, 2, 3, ""},
 				{2, 2, 3, ""},
 			})
@@ -50,12 +53,12 @@ var _ = Describe("Flusher", func() {
 
 		It("Added all batches with a 2 calls against repo.", func() {
 			mockRepo.EXPECT().
-				Add(gomock.Any()).
+				Add(ctx, gomock.Any()).
 				Return(nil).
 				MaxTimes(2).
 				MinTimes(2)
 
-			remains, err := fl.Flush([]models.Request{
+			remains, err := fl.Flush(ctx, []models.Request{
 				{1, 2, 3, ""},
 				{2, 2, 3, ""},
 				{3, 2, 3, ""},
@@ -67,12 +70,12 @@ var _ = Describe("Flusher", func() {
 
 		It("Added all batches with a 2 calls against repo. 1 items remained.", func() {
 			mockRepo.EXPECT().
-				Add(gomock.Any()).
+				Add(ctx, gomock.Any()).
 				Return(nil).
 				MaxTimes(3).
 				MinTimes(3)
 
-			remains, err := fl.Flush([]models.Request{
+			remains, err := fl.Flush(ctx, []models.Request{
 				{1, 2, 3, ""},
 				{2, 2, 3, ""},
 				{3, 2, 3, ""},
@@ -93,7 +96,7 @@ var _ = Describe("Flusher", func() {
 
 		It("Failed to add all items", func() {
 			mockRepo.EXPECT().
-				Add(gomock.Any()).
+				Add(ctx, gomock.Any()).
 				Return(errors.New("failed to add")).
 				MaxTimes(1).
 				MinTimes(1)
@@ -102,7 +105,7 @@ var _ = Describe("Flusher", func() {
 				{1, 2, 3, ""},
 				{2, 2, 3, ""},
 			}
-			remains, err := fl.Flush(requests)
+			remains, err := fl.Flush(ctx, requests)
 
 			Expect(remains).To(Equal(requests))
 			Expect(err).To(HaveOccurred())
@@ -111,15 +114,15 @@ var _ = Describe("Flusher", func() {
 		It("Successfully added 2 of 3 batches (partially failed)", func() {
 
 			successFullCall1 := mockRepo.EXPECT().
-				Add(gomock.Any()).
+				Add(ctx, gomock.Any()).
 				Return(nil)
 
 			successFullCall2 := mockRepo.EXPECT().
-				Add(gomock.Any()).
+				Add(ctx, gomock.Any()).
 				Return(nil)
 
 			failedCall := mockRepo.EXPECT().
-				Add(gomock.Any()).
+				Add(ctx, gomock.Any()).
 				Return(errors.New("failed to add"))
 
 			gomock.InOrder(successFullCall1, successFullCall2, failedCall)
@@ -133,7 +136,7 @@ var _ = Describe("Flusher", func() {
 				{6, 2, 3, ""},
 				{7, 2, 3, ""},
 			}
-			remains, err := fl.Flush(requests)
+			remains, err := fl.Flush(ctx, requests)
 
 			Expect(remains).To(Equal([]models.Request{
 				{5, 2, 3, ""},

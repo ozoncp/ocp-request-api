@@ -1,6 +1,7 @@
 package saver
 
 import (
+	"context"
 	"github.com/ozoncp/ocp-request-api/internal/flusher"
 	"github.com/ozoncp/ocp-request-api/internal/models"
 	"log"
@@ -102,7 +103,8 @@ func (s *saver) Close() {
 
 // flushes a slice of Requests
 func (s *saver) flush(requests []models.Request) {
-	if failedToFlushReq, err := s.flusher.Flush(requests); err != nil {
+	ctx := context.Background()
+	if failedToFlushReq, err := s.flusher.Flush(ctx, requests); err != nil {
 		log.Printf("failed to save %v requests: %v", len(failedToFlushReq), err)
 	}
 }

@@ -1,6 +1,7 @@
 package saver
 
 import (
+	"context"
 	"fmt"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -30,9 +31,11 @@ var _ = Describe("Saver", func() {
 		mockFlusher *mocks.MockFlusher
 		mockCtrl    *gomock.Controller
 		requests    []models.Request
+		ctx         context.Context
 	)
 
 	BeforeEach(func() {
+		ctx = context.Background()
 		mockCtrl = gomock.NewController(GinkgoT())
 		mockFlusher = mocks.NewMockFlusher(mockCtrl)
 	})
@@ -51,7 +54,7 @@ var _ = Describe("Saver", func() {
 			defer sav.Close()
 
 			mockFlusher.EXPECT().
-				Flush(requests).
+				Flush(ctx, requests).
 				Return(nil, nil).
 				MaxTimes(1).
 				MinTimes(1)
@@ -65,7 +68,7 @@ var _ = Describe("Saver", func() {
 		It("Saver flushes with a one call because we wrote data quickly", func() {
 			defer sav.Close()
 			mockFlusher.EXPECT().
-				Flush(requests).
+				Flush(ctx, requests).
 				Return(nil, nil).
 				MaxTimes(1).
 				MinTimes(1)
@@ -82,20 +85,20 @@ var _ = Describe("Saver", func() {
 		It("Saver flushes with a two calls because of a long pause between saves", func() {
 			defer sav.Close()
 			mockFlusher.EXPECT().
-				Flush(requests[:5]).
+				Flush(ctx, requests[:5]).
 				Return(nil, nil).
 				MaxTimes(1).
 				MinTimes(1)
 
 			mockFlusher.EXPECT().
-				Flush(requests[5:]).
+				Flush(ctx, requests[5:]).
 				Return(nil, nil).
 				MaxTimes(1).
 				MinTimes(1)
 
 			// we may pass an empty requests while sleeping
 			mockFlusher.EXPECT().
-				Flush([]models.Request{}).
+				Flush(ctx, []models.Request{}).
 				Return(nil, nil).
 				MinTimes(0).
 				MaxTimes(3)
@@ -133,7 +136,7 @@ var _ = Describe("Saver", func() {
 
 		It("Cannot Save() after Close()", func() {
 			mockFlusher.EXPECT().
-				Flush([]models.Request{}).
+				Flush(ctx, []models.Request{}).
 				Return(nil, nil).
 				MaxTimes(1)
 
@@ -146,7 +149,7 @@ var _ = Describe("Saver", func() {
 
 		It("Cannot Init() after Close()", func() {
 			mockFlusher.EXPECT().
-				Flush([]models.Request{}).
+				Flush(ctx, []models.Request{}).
 				Return(nil, nil).
 				MaxTimes(1)
 

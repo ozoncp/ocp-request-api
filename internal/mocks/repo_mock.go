@@ -5,6 +5,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -35,45 +36,45 @@ func (m *MockRepo) EXPECT() *MockRepoMockRecorder {
 }
 
 // Add mocks base method.
-func (m *MockRepo) Add(arg0 []models.Request) error {
+func (m *MockRepo) Add(arg0 context.Context, arg1 []models.Request) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Add", arg0)
+	ret := m.ctrl.Call(m, "Add", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Add indicates an expected call of Add.
-func (mr *MockRepoMockRecorder) Add(arg0 interface{}) *gomock.Call {
+func (mr *MockRepoMockRecorder) Add(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockRepo)(nil).Add), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockRepo)(nil).Add), arg0, arg1)
 }
 
 // Describe mocks base method.
-func (m *MockRepo) Describe(arg0 uint64) (*models.Request, error) {
+func (m *MockRepo) Describe(arg0 context.Context, arg1 uint64) (*models.Request, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Describe", arg0)
+	ret := m.ctrl.Call(m, "Describe", arg0, arg1)
 	ret0, _ := ret[0].(*models.Request)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Describe indicates an expected call of Describe.
-func (mr *MockRepoMockRecorder) Describe(arg0 interface{}) *gomock.Call {
+func (mr *MockRepoMockRecorder) Describe(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Describe", reflect.TypeOf((*MockRepo)(nil).Describe), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Describe", reflect.TypeOf((*MockRepo)(nil).Describe), arg0, arg1)
 }
 
 // List mocks base method.
-func (m *MockRepo) List(arg0, arg1 uint64) ([]models.Request, error) {
+func (m *MockRepo) List(arg0 context.Context, arg1, arg2 uint64) ([]models.Request, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "List", arg0, arg1)
+	ret := m.ctrl.Call(m, "List", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]models.Request)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // List indicates an expected call of List.
-func (mr *MockRepoMockRecorder) List(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockRepoMockRecorder) List(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockRepo)(nil).List), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockRepo)(nil).List), arg0, arg1, arg2)
 }
