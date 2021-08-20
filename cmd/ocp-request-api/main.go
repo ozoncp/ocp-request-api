@@ -57,8 +57,7 @@ func runJSON() {
 }
 
 func main() {
-	dsn := db.GetDSNFromENV()
-	database := db.Connect(dsn)
+	database := db.Connect(db.GetDSN())
 	defer database.Close()
 
 	go runJSON()

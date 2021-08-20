@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+const defaultDsn = "postgres://postgres:12345@localhost:5432/postgres?sslmode=disable"
+
 // Connect connects using given connection string and returns database instance.
 // Will panic on connect failure.
 func Connect(DSN string) *sql.DB {
@@ -19,13 +21,12 @@ func Connect(DSN string) *sql.DB {
 	return db
 }
 
-// GetDSNFromENV extracts database connection string from ENV variable
-func GetDSNFromENV() string {
+// GetDSN returns database DSN. It can be overridden from env variable.
+func GetDSN() string {
 	dsn := os.Getenv("OCP_REQUEST_DSN")
 
 	if dsn == "" {
-		log.Panic().
-			Msg("Database dsn is undefined. Set OCP_REQUEST_DSN env variable.")
+		dsn = defaultDsn
 	}
 	return dsn
 }

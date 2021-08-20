@@ -1,5 +1,5 @@
 ifeq ($(DB_DSN),)
-DB_DSN := "postgres://ocp-request:12345@localhost:5432/ocp-request?sslmode=disable"  # default for migrate command
+DB_DSN := "postgres://postgres:12345@localhost:5432/postgres?sslmode=disable"  # default for migrate command
 endif
 
 .PHONY: build

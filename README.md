@@ -20,15 +20,8 @@ cd ocp-request-api
 make build
 ```
 
-
-The compiled binary placed at `bin/ocp-request-api`. The app requires a database DSN to be passed as `OCP_REQUEST_DSN` env variable:
-
-```shell
-OCP_REQUEST_API="postgres://ocp-request:12345@localhost:5432/ocp-request?sslmode=disable" bin/ocp-request-api 
-```
-
-To start a local database run `docker compose up` from repository root. It starts dev Postgresql server locally.
-To create all tables run `make migrate`.
+The compiled binary placed at `bin/ocp-request-api`.
+To start a local database and other services run `docker compose up` from repository root. To create all tables run `make migrate`.
 
 ### Run tests
 
@@ -39,4 +32,8 @@ To run tests execute `make test` from repository root.
 
 - Build docker image `docker build . -t ocp-request-api`
 - Run `docker run -p 82:82 ocp-request-api`
+
+### ENV variables
+
+- `OCP_REQUEST_API` (default "postgres://postgres:12345@localhost:5432/postgres?sslmode=disable") - defines connection to Postresql.
 
