@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	sql "github.com/jmoiron/sqlx"
+	"github.com/ozoncp/ocp-request-api/internal/db"
 	"log"
 	"net"
 	"net/http"
@@ -18,13 +20,13 @@ const (
 	grpcServerEndpoint = "localhost:82"
 )
 
-func run() error {
+func run(database *sql.DB) error {
 	listen, err := net.Listen("tcp", grpcPort)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.ChainUnaryInterceptor(db.NewInterceptorWithDB(database)))
 	desc.RegisterOcpRequestApiServer(s, api.NewRequestApi())
 
 	if err := s.Serve(listen); err != nil {
@@ -54,8 +56,12 @@ func runJSON() {
 }
 
 func main() {
+	dsn := db.GetDSNFromENV()
+	database := db.Connect(dsn)
+	defer database.Close()
+
 	go runJSON()
-	if err := run(); err != nil {
+	if err := run(database); err != nil {
 		log.Fatal(err)
 	}
 }

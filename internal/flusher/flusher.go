@@ -38,7 +38,7 @@ func (f *flusher) Flush(ctx context.Context, requests []models.Request) ([]model
 
 	remains := make([]models.Request, 0, f.chunkSize)
 	for ix, chunk := range utils.SplitToBulks(requests, f.chunkSize) {
-		if err = f.requestRepo.Add(ctx, chunk); err != nil {
+		if err = f.requestRepo.AddMany(ctx, chunk); err != nil {
 			remains = append(remains, requests[ix*int(f.chunkSize):]...)
 			return remains, err // partially added
 		}
