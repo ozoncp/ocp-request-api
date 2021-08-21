@@ -1,3 +1,7 @@
+ifeq ($(DB_DSN),)
+DB_DSN := "postgres://postgres:12345@localhost:5432/postgres?sslmode=disable"  # default for migrate command
+endif
+
 .PHONY: build
 build: vendor-proto .generate .build
 
@@ -17,6 +21,10 @@ build: vendor-proto .generate .build
 		mv pkg/ocp-request-api/github.com/ozoncp/ocp-request-api/pkg/ocp-request-api/* pkg/ocp-request-api/
 		rm -rf pkg/ocp-request-api/github.com
 		mkdir -p cmd/ocp-request-api
+
+.PHONY: mockgen
+mockgen:
+		go generate internal/mockgen.go
 
 .PHONY: .build
 .build:
@@ -60,3 +68,21 @@ install-go-deps: .install-go-deps
 		go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
 		go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 		go install github.com/envoyproxy/protoc-gen-validate
+
+.PHONY: migrate
+migrate: .install-migrate-deps .migrate
+
+.PHONY: .install-migrate-deps
+.install-migrate-deps:
+		go get -u github.com/pressly/goose/v3/cmd/goose
+
+.PHONY: .migrate
+.migrate:
+		goose -dir sql-migrations postgres $(DB_DSN) up
+
+.PHONY: test
+test:
+		go test internal/flusher/* -v
+		go test internal/saver/* -v
+		go test internal/utils/* -v
+		go test internal/repo/* -v

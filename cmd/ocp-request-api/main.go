@@ -2,9 +2,13 @@ package main
 
 import (
 	"context"
+	sql "github.com/jmoiron/sqlx"
+	"github.com/ozoncp/ocp-request-api/internal/db"
+	"github.com/ozoncp/ocp-request-api/internal/repo"
 	"log"
 	"net"
 	"net/http"
+	"os"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/ozoncp/ocp-request-api/internal/api"
@@ -18,14 +22,22 @@ const (
 	grpcServerEndpoint = "localhost:82"
 )
 
-func run() error {
+func mustGetEnvVar(name, errorMsgIfNotDefined string) string {
+	envVal := os.Getenv(name)
+	if envVal == "" {
+		panic(errorMsgIfNotDefined)
+	}
+	return envVal
+}
+
+func run(database *sql.DB) error {
 	listen, err := net.Listen("tcp", grpcPort)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
 	s := grpc.NewServer()
-	desc.RegisterOcpRequestApiServer(s, api.NewRequestApi())
+	desc.RegisterOcpRequestApiServer(s, api.NewRequestApi(repo.NewRepo(database)))
 
 	if err := s.Serve(listen); err != nil {
 		log.Fatalf("failed to serve: %v", err)
@@ -54,8 +66,13 @@ func runJSON() {
 }
 
 func main() {
+	dsn := mustGetEnvVar("OCP_REQUEST_DSN",
+		"Cannot connect to db. OCP_REQUEST_DSN is not set")
+	database := db.Connect(dsn)
+	defer database.Close()
+
 	go runJSON()
-	if err := run(); err != nil {
+	if err := run(database); err != nil {
 		log.Fatal(err)
 	}
 }
