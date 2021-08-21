@@ -50,13 +50,13 @@
         ]
       },
       "post": {
-        "summary": "CreateRequestV1 creates new request. Returns id of created object.",
-        "operationId": "OcpRequestApi_CreateRequestV1",
+        "summary": "MultiCreateRequestV1 creates multiple requests.\nReturns array of new ids in corresponding order.",
+        "operationId": "OcpRequestApi_MultiCreateRequestV1",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/apiCreateRequestV1Response"
+              "$ref": "#/definitions/apiMultiCreateRequestV1Response"
             }
           },
           "default": {
@@ -72,7 +72,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiCreateRequestV1Request"
+              "$ref": "#/definitions/apiMultiCreateRequestV1Request"
             }
           }
         ],
@@ -141,6 +141,44 @@
         "tags": [
           "OcpRequestApi"
         ]
+      },
+      "put": {
+        "summary": "UpdateRequestV1 updates request data",
+        "operationId": "OcpRequestApi_UpdateRequestV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiUpdateRequestV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiUpdateRequestV1Request"
+            }
+          }
+        ],
+        "tags": [
+          "OcpRequestApi"
+        ]
       }
     }
   },
@@ -193,14 +231,34 @@
       },
       "title": "A result of ListRequestV1. Contains a list of Requests,"
     },
-    "apiRemoveRequestV1Response": {
+    "apiMultiCreateRequestV1Request": {
       "type": "object",
       "properties": {
-        "found": {
-          "type": "boolean"
+        "requests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiCreateRequestV1Request"
+          }
         }
       },
-      "description": "Indicates whether request exited and removed."
+      "description": "Contains a batch of new requests to create."
+    },
+    "apiMultiCreateRequestV1Response": {
+      "type": "object",
+      "properties": {
+        "request_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uint64"
+          }
+        }
+      },
+      "title": "Api returns created requests ids"
+    },
+    "apiRemoveRequestV1Response": {
+      "type": "object",
+      "title": "Remove response (Empty for now. Will return an error if request was not found)"
     },
     "apiRequest": {
       "type": "object",
@@ -221,6 +279,31 @@
           "type": "string"
         }
       }
+    },
+    "apiUpdateRequestV1Request": {
+      "type": "object",
+      "properties": {
+        "request_id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "user_id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "type": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "title": "Updates request info"
+    },
+    "apiUpdateRequestV1Response": {
+      "type": "object",
+      "description": "Update response (Empty for now. Will return an error if request was not found)."
     },
     "protobufAny": {
       "type": "object",

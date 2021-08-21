@@ -22,8 +22,13 @@ type OcpRequestApiClient interface {
 	ListRequestV1(ctx context.Context, in *ListRequestsV1Request, opts ...grpc.CallOption) (*ListRequestsV1Response, error)
 	// DescribeTaskV1 returns detailed information of a given Request.
 	DescribeRequestV1(ctx context.Context, in *DescribeRequestV1Request, opts ...grpc.CallOption) (*DescribeRequestV1Response, error)
+	// UpdateRequestV1 updates request data
+	UpdateRequestV1(ctx context.Context, in *UpdateRequestV1Request, opts ...grpc.CallOption) (*UpdateRequestV1Response, error)
 	// CreateRequestV1 creates new request. Returns id of created object.
 	CreateRequestV1(ctx context.Context, in *CreateRequestV1Request, opts ...grpc.CallOption) (*CreateRequestV1Response, error)
+	// MultiCreateRequestV1 creates multiple requests.
+	// Returns array of new ids in corresponding order.
+	MultiCreateRequestV1(ctx context.Context, in *MultiCreateRequestV1Request, opts ...grpc.CallOption) (*MultiCreateRequestV1Response, error)
 	// RemoveRequestV1 removes user request by a its by.
 	// Returns a bool flag indicating if object actually existed and hence removed.
 	RemoveRequestV1(ctx context.Context, in *RemoveRequestV1Request, opts ...grpc.CallOption) (*RemoveRequestV1Response, error)
@@ -55,9 +60,27 @@ func (c *ocpRequestApiClient) DescribeRequestV1(ctx context.Context, in *Describ
 	return out, nil
 }
 
+func (c *ocpRequestApiClient) UpdateRequestV1(ctx context.Context, in *UpdateRequestV1Request, opts ...grpc.CallOption) (*UpdateRequestV1Response, error) {
+	out := new(UpdateRequestV1Response)
+	err := c.cc.Invoke(ctx, "/ocp.task.api.OcpRequestApi/UpdateRequestV1", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *ocpRequestApiClient) CreateRequestV1(ctx context.Context, in *CreateRequestV1Request, opts ...grpc.CallOption) (*CreateRequestV1Response, error) {
 	out := new(CreateRequestV1Response)
 	err := c.cc.Invoke(ctx, "/ocp.task.api.OcpRequestApi/CreateRequestV1", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ocpRequestApiClient) MultiCreateRequestV1(ctx context.Context, in *MultiCreateRequestV1Request, opts ...grpc.CallOption) (*MultiCreateRequestV1Response, error) {
+	out := new(MultiCreateRequestV1Response)
+	err := c.cc.Invoke(ctx, "/ocp.task.api.OcpRequestApi/MultiCreateRequestV1", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -81,8 +104,13 @@ type OcpRequestApiServer interface {
 	ListRequestV1(context.Context, *ListRequestsV1Request) (*ListRequestsV1Response, error)
 	// DescribeTaskV1 returns detailed information of a given Request.
 	DescribeRequestV1(context.Context, *DescribeRequestV1Request) (*DescribeRequestV1Response, error)
+	// UpdateRequestV1 updates request data
+	UpdateRequestV1(context.Context, *UpdateRequestV1Request) (*UpdateRequestV1Response, error)
 	// CreateRequestV1 creates new request. Returns id of created object.
 	CreateRequestV1(context.Context, *CreateRequestV1Request) (*CreateRequestV1Response, error)
+	// MultiCreateRequestV1 creates multiple requests.
+	// Returns array of new ids in corresponding order.
+	MultiCreateRequestV1(context.Context, *MultiCreateRequestV1Request) (*MultiCreateRequestV1Response, error)
 	// RemoveRequestV1 removes user request by a its by.
 	// Returns a bool flag indicating if object actually existed and hence removed.
 	RemoveRequestV1(context.Context, *RemoveRequestV1Request) (*RemoveRequestV1Response, error)
@@ -99,8 +127,14 @@ func (UnimplementedOcpRequestApiServer) ListRequestV1(context.Context, *ListRequ
 func (UnimplementedOcpRequestApiServer) DescribeRequestV1(context.Context, *DescribeRequestV1Request) (*DescribeRequestV1Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DescribeRequestV1 not implemented")
 }
+func (UnimplementedOcpRequestApiServer) UpdateRequestV1(context.Context, *UpdateRequestV1Request) (*UpdateRequestV1Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateRequestV1 not implemented")
+}
 func (UnimplementedOcpRequestApiServer) CreateRequestV1(context.Context, *CreateRequestV1Request) (*CreateRequestV1Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateRequestV1 not implemented")
+}
+func (UnimplementedOcpRequestApiServer) MultiCreateRequestV1(context.Context, *MultiCreateRequestV1Request) (*MultiCreateRequestV1Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MultiCreateRequestV1 not implemented")
 }
 func (UnimplementedOcpRequestApiServer) RemoveRequestV1(context.Context, *RemoveRequestV1Request) (*RemoveRequestV1Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveRequestV1 not implemented")
@@ -154,6 +188,24 @@ func _OcpRequestApi_DescribeRequestV1_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OcpRequestApi_UpdateRequestV1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateRequestV1Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OcpRequestApiServer).UpdateRequestV1(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ocp.task.api.OcpRequestApi/UpdateRequestV1",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OcpRequestApiServer).UpdateRequestV1(ctx, req.(*UpdateRequestV1Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _OcpRequestApi_CreateRequestV1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateRequestV1Request)
 	if err := dec(in); err != nil {
@@ -168,6 +220,24 @@ func _OcpRequestApi_CreateRequestV1_Handler(srv interface{}, ctx context.Context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OcpRequestApiServer).CreateRequestV1(ctx, req.(*CreateRequestV1Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OcpRequestApi_MultiCreateRequestV1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MultiCreateRequestV1Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OcpRequestApiServer).MultiCreateRequestV1(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ocp.task.api.OcpRequestApi/MultiCreateRequestV1",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OcpRequestApiServer).MultiCreateRequestV1(ctx, req.(*MultiCreateRequestV1Request))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -206,8 +276,16 @@ var OcpRequestApi_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _OcpRequestApi_DescribeRequestV1_Handler,
 		},
 		{
+			MethodName: "UpdateRequestV1",
+			Handler:    _OcpRequestApi_UpdateRequestV1_Handler,
+		},
+		{
 			MethodName: "CreateRequestV1",
 			Handler:    _OcpRequestApi_CreateRequestV1_Handler,
+		},
+		{
+			MethodName: "MultiCreateRequestV1",
+			Handler:    _OcpRequestApi_MultiCreateRequestV1_Handler,
 		},
 		{
 			MethodName: "RemoveRequestV1",

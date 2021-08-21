@@ -35,5 +35,6 @@ To run tests execute `make test` from repository root.
 
 ### ENV variables
 
-- `OCP_REQUEST_API` (default "postgres://postgres:12345@localhost:5432/postgres?sslmode=disable") - defines connection to Postresql.
+- `OCP_REQUEST_API` - defines connection to Postresql.
+- `OCP_REQUEST_BATCH_SIZE` - Controls batch size of multi create endpoint.
 

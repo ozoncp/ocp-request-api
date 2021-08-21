@@ -95,17 +95,21 @@ var _ = Describe("Repo", func() {
 			for _, req := range requests {
 				expectedQueryArgs = append(expectedQueryArgs, req.UserId, req.Type, req.Text)
 			}
-			res := sqlmock.NewResult(3, 3)
+			expctedNewIds := []uint64{1, 2, 3}
 
 			dbMock.ExpectPrepare(
-				"INSERT INTO requests \\(user_id,type,text\\) VALUES \\(\\$1,\\$2,\\$3\\),\\(\\$4,\\$5,\\$6\\),\\(\\$7,\\$8,\\$9\\)",
+				"INSERT INTO requests \\(user_id,type,text\\) VALUES \\(\\$1,\\$2,\\$3\\),\\(\\$4,\\$5,\\$6\\),\\(\\$7,\\$8,\\$9\\) RETURNING id",
 			).
-				ExpectExec().
+				ExpectQuery().
 				WithArgs(expectedQueryArgs...).
-				WillReturnResult(res)
+				WillReturnRows(sqlmock.NewRows([]string{"id"}).
+					AddRow(1).
+					AddRow(2).
+					AddRow(3))
 
-			err := rep.AddMany(ctx, requests)
+			newIds, err := rep.AddMany(ctx, requests)
 			Expect(err).ToNot(HaveOccurred())
+			Expect(newIds).To(Equal(expctedNewIds))
 
 		})
 
@@ -152,9 +156,8 @@ var _ = Describe("Repo", func() {
 				WithArgs(reqId).
 				WillReturnResult(res)
 
-			found, err := rep.Remove(ctx, reqId)
+			err := rep.Remove(ctx, reqId)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(found).To(Equal(true))
 		})
 
 		It("Remove request that is not exists", func() {
@@ -168,9 +171,8 @@ var _ = Describe("Repo", func() {
 				WithArgs(reqId).
 				WillReturnResult(res)
 
-			found, err := rep.Remove(ctx, reqId)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(found).To(Equal(false))
+			err := rep.Remove(ctx, reqId)
+			Expect(err).To(Equal(NotFound))
 		})
 
 		It("Return single request that is exists", func() {
@@ -256,13 +258,13 @@ var _ = Describe("Repo", func() {
 			}
 			expectedError := errors.New("test")
 			dbMock.ExpectPrepare(
-				"INSERT INTO requests \\(user_id,type,text\\) VALUES \\(\\$1,\\$2,\\$3\\)",
+				"INSERT INTO requests \\(user_id,type,text\\) VALUES \\(\\$1,\\$2,\\$3\\) RETURNING id",
 			).
-				ExpectExec().
+				ExpectQuery().
 				WithArgs(newReq.UserId, newReq.Type, newReq.Text).
 				WillReturnError(expectedError)
 
-			err := rep.AddMany(ctx, []models.Request{newReq})
+			_, err := rep.AddMany(ctx, []models.Request{newReq})
 			Expect(err).To(Equal(expectedError))
 
 		})
@@ -278,10 +280,38 @@ var _ = Describe("Repo", func() {
 				WithArgs(reqId).
 				WillReturnError(expectedError)
 
-			found, err := rep.Remove(ctx, reqId)
+			err := rep.Remove(ctx, reqId)
 			Expect(err).To(Equal(expectedError))
-			Expect(found).To(Equal(false))
+		})
 
+		It("Update request that is exists", func() {
+			req := models.NewRequest(1, 10, 100, "one")
+			res := sqlmock.NewResult(0, 1)
+
+			dbMock.ExpectPrepare(
+				"UPDATE requests SET user_id = \\$1, type = \\$2, text = \\$3 WHERE id = \\$4",
+			).
+				ExpectExec().
+				WithArgs(req.UserId, req.Type, req.Text, req.Id).
+				WillReturnResult(res)
+
+			err := rep.Update(ctx, req)
+			Expect(err).ToNot(Equal(NotFound))
+		})
+
+		It("Update request that is not exists", func() {
+			req := models.NewRequest(1, 10, 100, "one")
+			res := sqlmock.NewResult(0, 0)
+
+			dbMock.ExpectPrepare(
+				"UPDATE requests SET user_id = \\$1, type = \\$2, text = \\$3 WHERE id = \\$4",
+			).
+				ExpectExec().
+				WithArgs(req.UserId, req.Type, req.Text, req.Id).
+				WillReturnResult(res)
+
+			err := rep.Update(ctx, req)
+			Expect(err).To(Equal(NotFound))
 		})
 
 	})

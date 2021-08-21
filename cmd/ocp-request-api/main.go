@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/ozoncp/ocp-request-api/internal/api"
@@ -22,12 +23,21 @@ const (
 	grpcServerEndpoint = "localhost:82"
 )
 
-func mustGetEnvVar(name, errorMsgIfNotDefined string) string {
+func mustGetEnvString(name string) string {
 	envVal := os.Getenv(name)
 	if envVal == "" {
-		panic(errorMsgIfNotDefined)
+		log.Panicf("%v is not set", name)
 	}
 	return envVal
+}
+
+func mustGetEnvUInt(name string) uint64 {
+	val := mustGetEnvString(name)
+	uintVal, err := strconv.ParseUint(val, 10, 64)
+	if err != nil {
+		log.Panicf("%v value must be int", name)
+	}
+	return uintVal
 }
 
 func run(database *sql.DB) error {
@@ -37,7 +47,8 @@ func run(database *sql.DB) error {
 	}
 
 	s := grpc.NewServer()
-	desc.RegisterOcpRequestApiServer(s, api.NewRequestApi(repo.NewRepo(database)))
+	batchSize := mustGetEnvUInt("OCP_REQUEST_BATCH_SIZE")
+	desc.RegisterOcpRequestApiServer(s, api.NewRequestApi(repo.NewRepo(database), uint(batchSize)))
 
 	if err := s.Serve(listen); err != nil {
 		log.Fatalf("failed to serve: %v", err)
@@ -66,8 +77,7 @@ func runJSON() {
 }
 
 func main() {
-	dsn := mustGetEnvVar("OCP_REQUEST_DSN",
-		"Cannot connect to db. OCP_REQUEST_DSN is not set")
+	dsn := mustGetEnvString("OCP_REQUEST_DSN")
 	database := db.Connect(dsn)
 	defer database.Close()
 

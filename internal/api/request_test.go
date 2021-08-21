@@ -35,7 +35,7 @@ var _ = Describe("Flusher", func() {
 
 	Context("Add new item and return its id", func() {
 		JustBeforeEach(func() {
-			requestApi = api.NewRequestApi(mockRepo)
+			requestApi = api.NewRequestApi(mockRepo, 2)
 			ctx = context.Background()
 		})
 
@@ -53,6 +53,59 @@ var _ = Describe("Flusher", func() {
 			Expect(resp).
 				To(Equal(&desc.CreateRequestV1Response{
 					RequestId: newRequestId,
+				}))
+
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("Add many requests with no error", func() {
+			requestsToCreate := []models.Request{
+				{
+					Id:     0,
+					UserId: 10,
+					Type:   100,
+					Text:   "one",
+				},
+				{
+					Id:     0,
+					UserId: 20,
+					Type:   200,
+					Text:   "two",
+				},
+				{
+					Id:     0,
+					UserId: 30,
+					Type:   300,
+					Text:   "three",
+				},
+			}
+			createRequests := make([]*desc.CreateRequestV1Request, 0)
+			for _, r := range requestsToCreate {
+				createRequests = append(createRequests, &desc.CreateRequestV1Request{
+					UserId: r.UserId,
+					Type:   r.Type,
+					Text:   r.Text,
+				})
+			}
+
+			mockRepo.EXPECT().
+				AddMany(ctx, requestsToCreate[:2]).
+				Return([]uint64{1, 2}, nil).
+				MaxTimes(1).
+				MinTimes(1)
+
+			mockRepo.EXPECT().
+				AddMany(ctx, requestsToCreate[2:]).
+				Return([]uint64{3}, nil).
+				MaxTimes(1).
+				MinTimes(1)
+			resp, err := requestApi.MultiCreateRequestV1(
+				ctx, &desc.MultiCreateRequestV1Request{Requests: createRequests},
+			)
+
+			Expect(resp).
+				To(Equal(&desc.MultiCreateRequestV1Response{
+					RequestIds: []uint64{1, 2, 3},
 				}))
 
 			Expect(err).ToNot(HaveOccurred())
@@ -132,11 +185,47 @@ var _ = Describe("Flusher", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		removeTest := func(expectFound bool) {
+		It("Update existing request", func() {
+			req := models.NewRequest(1, 10, 100, "one")
+			mockRepo.EXPECT().
+				Update(ctx, req).
+				Return(nil).
+				MaxTimes(1).
+				MinTimes(1)
+			resp, err := requestApi.UpdateRequestV1(
+				ctx, &desc.UpdateRequestV1Request{
+					RequestId: req.Id,
+					UserId:    req.UserId,
+					Type:      req.Type,
+					Text:      req.Text,
+				},
+			)
+			Expect(resp).
+				To(Equal(&desc.UpdateRequestV1Response{}))
+
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("Remove non-existing request with no errors", func() {
 			requestId := uint64(19)
 			mockRepo.EXPECT().
 				Remove(ctx, requestId).
-				Return(expectFound, nil).
+				Return(repo.NotFound).
+				MaxTimes(1).
+				MinTimes(1)
+			_, err := requestApi.RemoveRequestV1(
+				ctx, &desc.RemoveRequestV1Request{
+					RequestId: requestId,
+				},
+			)
+			Expect(err).To(Equal(status.Error(codes.NotFound, "request does not exist")))
+		})
+
+		It("Remove existing request with no errors", func() {
+			requestId := uint64(19)
+			mockRepo.EXPECT().
+				Remove(ctx, requestId).
+				Return(nil).
 				MaxTimes(1).
 				MinTimes(1)
 			resp, err := requestApi.RemoveRequestV1(
@@ -144,19 +233,24 @@ var _ = Describe("Flusher", func() {
 					RequestId: requestId,
 				},
 			)
-
 			Expect(resp).
-				To(Equal(&desc.RemoveRequestV1Response{
-					Found: expectFound,
-				}))
+				To(Equal(&desc.RemoveRequestV1Response{}))
 
 			Expect(err).ToNot(HaveOccurred())
-		}
-		It("Remove existing request with no errors", func() {
-			removeTest(true)
 		})
 		It("Remove non-existing request with no errors", func() {
-			removeTest(false)
+			requestId := uint64(19)
+			mockRepo.EXPECT().
+				Remove(ctx, requestId).
+				Return(repo.NotFound).
+				MaxTimes(1).
+				MinTimes(1)
+			_, err := requestApi.RemoveRequestV1(
+				ctx, &desc.RemoveRequestV1Request{
+					RequestId: requestId,
+				},
+			)
+			Expect(err).To(Equal(status.Error(codes.NotFound, "request does not exist")))
 		})
 
 		It("Describe existing request", func() {
