@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/ozoncp/ocp-request-api/internal/api"
@@ -20,6 +21,14 @@ const (
 	grpcPort           = ":82"
 	grpcServerEndpoint = "localhost:82"
 )
+
+func mustGetEnvVar(name, errorMsgIfNotDefined string) string {
+	envVal := os.Getenv(name)
+	if envVal == "" {
+		panic(errorMsgIfNotDefined)
+	}
+	return envVal
+}
 
 func run(database *sql.DB) error {
 	listen, err := net.Listen("tcp", grpcPort)
@@ -57,7 +66,9 @@ func runJSON() {
 }
 
 func main() {
-	database := db.Connect(db.GetDSN())
+	dsn := mustGetEnvVar("OCP_REQUEST_DSN",
+		"Cannot connect to db. OCP_REQUEST_DSN is not set")
+	database := db.Connect(dsn)
 	defer database.Close()
 
 	go runJSON()

@@ -2,8 +2,8 @@
 CREATE TABLE requests
 (
     id      SERIAL PRIMARY KEY,
-    user_id int8 NOT NULL,
-    type    int8 NOT NULL,
+    user_id BIGINT NOT NULL,
+    type    BIGINT NOT NULL,
     text    TEXT NOT NULL
 );
 

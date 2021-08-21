@@ -40,14 +40,15 @@ func (r *repo) Add(ctx context.Context, request models.Request) (uint64, error) 
 		Values(request.UserId, request.Type, request.Text)
 	newTaskId := uint64(0)
 
-	if rows, err := query.QueryContext(ctx); err != nil {
+	rows, err := query.QueryContext(ctx)
+	if err != nil {
 		return newTaskId, err
-	} else {
-		rows.Next()
-		if err := rows.Scan(&newTaskId); err != nil {
-			return newTaskId, err
-		}
 	}
+	rows.Next()
+	if err := rows.Scan(&newTaskId); err != nil {
+		return newTaskId, err
+	}
+
 	return newTaskId, nil
 }
 
@@ -118,9 +119,10 @@ func (r *repo) Remove(ctx context.Context, id uint64) (bool, error) {
 		return false, err
 	}
 
-	if rowsDeleted, err := ret.RowsAffected(); err != nil {
+	rowsDeleted, err := ret.RowsAffected()
+	if err != nil {
 		return false, err
-	} else {
-		return rowsDeleted > 0, err
 	}
+	return rowsDeleted > 0, err
+
 }
