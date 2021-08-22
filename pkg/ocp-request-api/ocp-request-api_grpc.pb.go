@@ -44,7 +44,7 @@ func NewOcpRequestApiClient(cc grpc.ClientConnInterface) OcpRequestApiClient {
 
 func (c *ocpRequestApiClient) ListRequestV1(ctx context.Context, in *ListRequestsV1Request, opts ...grpc.CallOption) (*ListRequestsV1Response, error) {
 	out := new(ListRequestsV1Response)
-	err := c.cc.Invoke(ctx, "/ocp.task.api.OcpRequestApi/ListRequestV1", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ocp.request.api.OcpRequestApi/ListRequestV1", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (c *ocpRequestApiClient) ListRequestV1(ctx context.Context, in *ListRequest
 
 func (c *ocpRequestApiClient) DescribeRequestV1(ctx context.Context, in *DescribeRequestV1Request, opts ...grpc.CallOption) (*DescribeRequestV1Response, error) {
 	out := new(DescribeRequestV1Response)
-	err := c.cc.Invoke(ctx, "/ocp.task.api.OcpRequestApi/DescribeRequestV1", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ocp.request.api.OcpRequestApi/DescribeRequestV1", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (c *ocpRequestApiClient) DescribeRequestV1(ctx context.Context, in *Describ
 
 func (c *ocpRequestApiClient) UpdateRequestV1(ctx context.Context, in *UpdateRequestV1Request, opts ...grpc.CallOption) (*UpdateRequestV1Response, error) {
 	out := new(UpdateRequestV1Response)
-	err := c.cc.Invoke(ctx, "/ocp.task.api.OcpRequestApi/UpdateRequestV1", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ocp.request.api.OcpRequestApi/UpdateRequestV1", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (c *ocpRequestApiClient) UpdateRequestV1(ctx context.Context, in *UpdateReq
 
 func (c *ocpRequestApiClient) CreateRequestV1(ctx context.Context, in *CreateRequestV1Request, opts ...grpc.CallOption) (*CreateRequestV1Response, error) {
 	out := new(CreateRequestV1Response)
-	err := c.cc.Invoke(ctx, "/ocp.task.api.OcpRequestApi/CreateRequestV1", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ocp.request.api.OcpRequestApi/CreateRequestV1", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (c *ocpRequestApiClient) CreateRequestV1(ctx context.Context, in *CreateReq
 
 func (c *ocpRequestApiClient) MultiCreateRequestV1(ctx context.Context, in *MultiCreateRequestV1Request, opts ...grpc.CallOption) (*MultiCreateRequestV1Response, error) {
 	out := new(MultiCreateRequestV1Response)
-	err := c.cc.Invoke(ctx, "/ocp.task.api.OcpRequestApi/MultiCreateRequestV1", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ocp.request.api.OcpRequestApi/MultiCreateRequestV1", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (c *ocpRequestApiClient) MultiCreateRequestV1(ctx context.Context, in *Mult
 
 func (c *ocpRequestApiClient) RemoveRequestV1(ctx context.Context, in *RemoveRequestV1Request, opts ...grpc.CallOption) (*RemoveRequestV1Response, error) {
 	out := new(RemoveRequestV1Response)
-	err := c.cc.Invoke(ctx, "/ocp.task.api.OcpRequestApi/RemoveRequestV1", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ocp.request.api.OcpRequestApi/RemoveRequestV1", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func _OcpRequestApi_ListRequestV1_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ocp.task.api.OcpRequestApi/ListRequestV1",
+		FullMethod: "/ocp.request.api.OcpRequestApi/ListRequestV1",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OcpRequestApiServer).ListRequestV1(ctx, req.(*ListRequestsV1Request))
@@ -180,7 +180,7 @@ func _OcpRequestApi_DescribeRequestV1_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ocp.task.api.OcpRequestApi/DescribeRequestV1",
+		FullMethod: "/ocp.request.api.OcpRequestApi/DescribeRequestV1",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OcpRequestApiServer).DescribeRequestV1(ctx, req.(*DescribeRequestV1Request))
@@ -198,7 +198,7 @@ func _OcpRequestApi_UpdateRequestV1_Handler(srv interface{}, ctx context.Context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ocp.task.api.OcpRequestApi/UpdateRequestV1",
+		FullMethod: "/ocp.request.api.OcpRequestApi/UpdateRequestV1",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OcpRequestApiServer).UpdateRequestV1(ctx, req.(*UpdateRequestV1Request))
@@ -216,7 +216,7 @@ func _OcpRequestApi_CreateRequestV1_Handler(srv interface{}, ctx context.Context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ocp.task.api.OcpRequestApi/CreateRequestV1",
+		FullMethod: "/ocp.request.api.OcpRequestApi/CreateRequestV1",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OcpRequestApiServer).CreateRequestV1(ctx, req.(*CreateRequestV1Request))
@@ -234,7 +234,7 @@ func _OcpRequestApi_MultiCreateRequestV1_Handler(srv interface{}, ctx context.Co
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ocp.task.api.OcpRequestApi/MultiCreateRequestV1",
+		FullMethod: "/ocp.request.api.OcpRequestApi/MultiCreateRequestV1",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OcpRequestApiServer).MultiCreateRequestV1(ctx, req.(*MultiCreateRequestV1Request))
@@ -252,7 +252,7 @@ func _OcpRequestApi_RemoveRequestV1_Handler(srv interface{}, ctx context.Context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ocp.task.api.OcpRequestApi/RemoveRequestV1",
+		FullMethod: "/ocp.request.api.OcpRequestApi/RemoveRequestV1",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OcpRequestApiServer).RemoveRequestV1(ctx, req.(*RemoveRequestV1Request))
@@ -264,7 +264,7 @@ func _OcpRequestApi_RemoveRequestV1_Handler(srv interface{}, ctx context.Context
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var OcpRequestApi_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "ocp.task.api.OcpRequestApi",
+	ServiceName: "ocp.request.api.OcpRequestApi",
 	HandlerType: (*OcpRequestApiServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

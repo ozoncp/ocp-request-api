@@ -3,7 +3,9 @@ package api
 import (
 	"context"
 	"errors"
+	"github.com/ozoncp/ocp-request-api/internal/metrics"
 	"github.com/ozoncp/ocp-request-api/internal/models"
+	"github.com/ozoncp/ocp-request-api/internal/producer"
 	repository "github.com/ozoncp/ocp-request-api/internal/repo"
 	"github.com/ozoncp/ocp-request-api/internal/utils"
 	desc "github.com/ozoncp/ocp-request-api/pkg/ocp-request-api"
@@ -13,14 +15,24 @@ import (
 )
 
 // NewRequestApi creates Request API instance
-func NewRequestApi(r repository.Repo, batchSize uint) *RequestAPI {
-	return &RequestAPI{repo: r, batchSize: batchSize}
+func NewRequestApi(r repository.Repo,
+	batchSize uint,
+	metricsReporter metrics.MetricsReporter,
+	producer producer.Producer) *RequestAPI {
+	return &RequestAPI{
+		repo:      r,
+		batchSize: batchSize,
+		metrics:   metricsReporter,
+		producer:  producer,
+	}
 }
 
 type RequestAPI struct {
 	desc.UnimplementedOcpRequestApiServer
 	repo      repository.Repo
 	batchSize uint // batch size for multi create
+	metrics   metrics.MetricsReporter
+	producer  producer.Producer
 }
 
 // ListRequestV1 returns a list of user Requests
@@ -28,25 +40,30 @@ func (r *RequestAPI) ListRequestV1(ctx context.Context, req *desc.ListRequestsV1
 	log.Printf("Got list request: %v", req)
 
 	if err := req.Validate(); err != nil {
+		r.notifyApiEvent(ctx, 0, producer.Read, err)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-	reqs, err := r.repo.List(ctx, req.Limit, req.Offset)
+	requests, err := r.repo.List(ctx, req.Limit, req.Offset)
 
 	if err != nil {
 		log.Error().Msgf("Request %v failed with %v", req, err)
+		r.notifyApiEvent(ctx, 0, producer.Read, err)
 		return nil, err
 	}
 
-	ret := make([]*desc.Request, 0, len(reqs))
+	ret := make([]*desc.Request, 0, len(requests))
 
-	for _, r := range reqs {
+	for _, req := range requests {
 		ret = append(ret, &desc.Request{
-			Id:     r.Id,
-			UserId: r.UserId,
-			Type:   r.Type,
-			Text:   r.Text,
+			Id:     req.Id,
+			UserId: req.UserId,
+			Type:   req.Type,
+			Text:   req.Text,
 		})
+		r.notifyApiEvent(ctx, req.Id, producer.Read, nil)
+
 	}
+	r.metrics.IncList(1, "ListRequestV1")
 	return &desc.ListRequestsV1Response{
 		Requests: ret,
 	}, nil
@@ -57,6 +74,7 @@ func (r *RequestAPI) DescribeRequestV1(ctx context.Context, req *desc.DescribeRe
 	log.Printf("Got describe request: %v", req)
 
 	if err := req.Validate(); err != nil {
+		r.notifyApiEvent(ctx, req.RequestId, producer.Read, err)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 	ret, err := r.repo.Describe(ctx, req.RequestId)
@@ -68,6 +86,9 @@ func (r *RequestAPI) DescribeRequestV1(ctx context.Context, req *desc.DescribeRe
 		return nil, err
 	}
 
+	r.notifyApiEvent(ctx, req.RequestId, producer.Read, err)
+	r.metrics.IncRead(1, "DescribeRequestV1")
+
 	return &desc.DescribeRequestV1Response{
 		Request: &desc.Request{
 			Id:     ret.Id,
@@ -76,12 +97,14 @@ func (r *RequestAPI) DescribeRequestV1(ctx context.Context, req *desc.DescribeRe
 			Text:   ret.Text,
 		},
 	}, nil
+
 }
 
 // CreateRequestV1  Creates new Request and returns its new ID
 func (r *RequestAPI) CreateRequestV1(ctx context.Context, req *desc.CreateRequestV1Request) (*desc.CreateRequestV1Response, error) {
 	log.Printf("Got create request: %v", req)
 	if err := req.Validate(); err != nil {
+		r.notifyApiEvent(ctx, 0, producer.Create, err)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
@@ -91,21 +114,25 @@ func (r *RequestAPI) CreateRequestV1(ctx context.Context, req *desc.CreateReques
 		req.Type,
 		req.Text,
 	)
+	newId, err := r.repo.Add(ctx, newReq)
 
-	if newId, err := r.repo.Add(ctx, newReq); err != nil {
+	if err != nil {
 		log.Error().Msgf("Request %v failed with %v", req, err)
 		return nil, err
-	} else {
-		return &desc.CreateRequestV1Response{
-			RequestId: newId,
-		}, nil
 	}
+
+	r.notifyApiEvent(ctx, newId, producer.Create, err)
+	r.metrics.IncCreate(1, "CreateRequestV1")
+	return &desc.CreateRequestV1Response{
+		RequestId: newId,
+	}, nil
 }
 
 // MultiCreateRequestV1  Creates new Request and returns its new ID
 func (r *RequestAPI) MultiCreateRequestV1(ctx context.Context, req *desc.MultiCreateRequestV1Request) (*desc.MultiCreateRequestV1Response, error) {
 	log.Printf("Got multi create request: %v", req)
 	if err := req.Validate(); err != nil {
+		r.notifyApiEvent(ctx, 0, producer.Create, err)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
@@ -121,10 +148,17 @@ func (r *RequestAPI) MultiCreateRequestV1(ctx context.Context, req *desc.MultiCr
 		ids, err := r.repo.AddMany(ctx, batch)
 		if err != nil {
 			log.Error().Msgf("Failed to save requests failed with %v", err)
+			r.notifyApiEvent(ctx, 0, producer.Create, err)
 			return nil, err
 		}
 		newIds = append(newIds, ids...)
+
+		r.metrics.IncCreate(uint(len(ids)), "MultiCreateRequestV1")
+		for _, id := range ids {
+			r.notifyApiEvent(ctx, id, producer.Create, nil)
+		}
 	}
+
 	return &desc.MultiCreateRequestV1Response{
 		RequestIds: newIds,
 	}, nil
@@ -134,6 +168,7 @@ func (r *RequestAPI) MultiCreateRequestV1(ctx context.Context, req *desc.MultiCr
 func (r *RequestAPI) RemoveRequestV1(ctx context.Context, req *desc.RemoveRequestV1Request) (*desc.RemoveRequestV1Response, error) {
 	log.Printf("Got remove request: %v", req)
 	if err := req.Validate(); err != nil {
+		r.notifyApiEvent(ctx, req.RequestId, producer.Delete, err)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 	err := r.repo.Remove(ctx, req.RequestId)
@@ -143,7 +178,8 @@ func (r *RequestAPI) RemoveRequestV1(ctx context.Context, req *desc.RemoveReques
 		log.Error().Msgf("Request %v failed with %v", req, err)
 		return nil, err
 	}
-
+	r.notifyApiEvent(ctx, req.RequestId, producer.Delete, err)
+	r.metrics.IncRemove(1, "RemoveRequestV1")
 	return &desc.RemoveRequestV1Response{}, nil
 }
 
@@ -163,5 +199,11 @@ func (r *RequestAPI) UpdateRequestV1(ctx context.Context, req *desc.UpdateReques
 		return nil, err
 	}
 
+	r.notifyApiEvent(ctx, req.RequestId, producer.Update, err)
+	r.metrics.IncUpdate(1, "UpdateRequestV1")
 	return &desc.UpdateRequestV1Response{}, nil
+}
+
+func (r *RequestAPI) notifyApiEvent(ctx context.Context, requestId uint64, eventType producer.EventType, apiErr error) {
+	r.producer.Send(ctx, producer.NewEvent(requestId, eventType, apiErr))
 }

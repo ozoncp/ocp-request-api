@@ -3,7 +3,7 @@ syntax = "proto3";
 import "google/api/annotations.proto";
 import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
 
-package ocp.task.api;
+package ocp.request.api;
 
 option go_package = "github.com/ozoncp/ocp-request-api/pkg/ocp-request-api;ocp_request_api";
 
@@ -131,4 +131,19 @@ message Request {
   uint64 user_id = 2;
   uint64 type = 3;
   string text = 4;
+}
+
+
+// The below below related to API events that will be sent via Kafka
+
+message RequestAPIEvent {
+  uint64 request_id = 1;
+  enum EventType {
+    CREATE = 0;
+    READ = 1;
+    UPDATE = 2;
+    DELETE = 3;
+  }
+  EventType event = 2;
+  string error = 3;
 }

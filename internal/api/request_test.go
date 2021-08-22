@@ -17,15 +17,19 @@ import (
 var _ = Describe("Flusher", func() {
 
 	var (
-		requestApi *api.RequestAPI
-		mockRepo   *mocks.MockRepo
-		mockCtrl   *gomock.Controller
-		ctx        context.Context
+		requestApi   *api.RequestAPI
+		mockRepo     *mocks.MockRepo
+		mockCtrl     *gomock.Controller
+		ctx          context.Context
+		mockProm     *mocks.MockMetricsReporter
+		mockProducer *mocks.MockProducer
 	)
 
 	BeforeEach(func() {
 		mockCtrl = gomock.NewController(GinkgoT())
 		mockRepo = mocks.NewMockRepo(mockCtrl)
+		mockProm = mocks.NewMockMetricsReporter(mockCtrl)
+		mockProducer = mocks.NewMockProducer(mockCtrl)
 		ctx = context.Background()
 	})
 
@@ -35,7 +39,7 @@ var _ = Describe("Flusher", func() {
 
 	Context("Add new item and return its id", func() {
 		JustBeforeEach(func() {
-			requestApi = api.NewRequestApi(mockRepo, 2)
+			requestApi = api.NewRequestApi(mockRepo, 2, mockProm, mockProducer)
 			ctx = context.Background()
 		})
 
@@ -46,6 +50,17 @@ var _ = Describe("Flusher", func() {
 				Return(newRequestId, nil).
 				MaxTimes(1).
 				MinTimes(1)
+
+			mockProm.EXPECT().
+				IncCreate(uint(1), "CreateRequestV1").
+				MaxTimes(1).
+				MinTimes(1)
+
+			mockProducer.EXPECT().
+				Send(ctx, gomock.Any()).
+				MaxTimes(1).
+				MinTimes(1)
+
 			resp, err := requestApi.CreateRequestV1(
 				ctx, &desc.CreateRequestV1Request{UserId: 10, Type: 11, Text: "test"},
 			)
@@ -99,6 +114,22 @@ var _ = Describe("Flusher", func() {
 				Return([]uint64{3}, nil).
 				MaxTimes(1).
 				MinTimes(1)
+
+			mockProm.EXPECT().
+				IncCreate(uint(2), "MultiCreateRequestV1").
+				MaxTimes(1).
+				MinTimes(1)
+
+			mockProm.EXPECT().
+				IncCreate(uint(1), "MultiCreateRequestV1").
+				MaxTimes(1).
+				MinTimes(1)
+
+			mockProducer.EXPECT().
+				Send(ctx, gomock.Any()).
+				MaxTimes(3).
+				MinTimes(3)
+
 			resp, err := requestApi.MultiCreateRequestV1(
 				ctx, &desc.MultiCreateRequestV1Request{Requests: createRequests},
 			)
@@ -112,38 +143,63 @@ var _ = Describe("Flusher", func() {
 		})
 
 		It("Add() params validation", func() {
+			mockProducer.EXPECT().
+				Send(ctx, gomock.Any()).
+				MaxTimes(1).
+				MinTimes(1)
+
 			_, err := requestApi.CreateRequestV1(
 				ctx, &desc.CreateRequestV1Request{UserId: 0},
 			)
+
 			Expect(err.Error()).To(Equal("rpc error: code = InvalidArgument desc = invalid CreateRequestV1Request.UserId: value must be greater than 0"))
 
 		})
 
 		It("Remove() params validation", func() {
+			mockProducer.EXPECT().
+				Send(ctx, gomock.Any()).
+				MaxTimes(1).
+				MinTimes(1)
+
 			_, err := requestApi.RemoveRequestV1(
 				ctx, &desc.RemoveRequestV1Request{},
 			)
+
 			Expect(err.Error()).To(Equal("rpc error: code = InvalidArgument desc = invalid RemoveRequestV1Request.RequestId: value must be greater than 0"))
 
 		})
 
 		It("Describe() params validation", func() {
+			mockProducer.EXPECT().
+				Send(ctx, gomock.Any()).
+				MaxTimes(1).
+				MinTimes(1)
+
 			_, err := requestApi.DescribeRequestV1(
 				ctx, &desc.DescribeRequestV1Request{},
 			)
+
 			Expect(err.Error()).To(Equal("rpc error: code = InvalidArgument desc = invalid DescribeRequestV1Request.RequestId: value must be greater than 0"))
 
 		})
 
 		It("List() params validation", func() {
+			mockProducer.EXPECT().
+				Send(ctx, gomock.Any()).
+				MaxTimes(2).
+				MinTimes(2)
+
 			_, err := requestApi.ListRequestV1(
 				ctx, &desc.ListRequestsV1Request{Limit: 0},
 			)
+
 			Expect(err.Error()).To(Equal("rpc error: code = InvalidArgument desc = invalid ListRequestsV1Request.Limit: value must be inside range (0, 10000]"))
 
 			_, err = requestApi.ListRequestV1(
 				ctx, &desc.ListRequestsV1Request{Limit: 1000000},
 			)
+
 			Expect(err.Error()).To(Equal("rpc error: code = InvalidArgument desc = invalid ListRequestsV1Request.Limit: value must be inside range (0, 10000]"))
 
 		})
@@ -155,12 +211,22 @@ var _ = Describe("Flusher", func() {
 				{2, 200, 2000, "two"},
 				{3, 300, 3000, "three"},
 			}
+			mockProm.EXPECT().
+				IncList(uint(1), "ListRequestV1").
+				MaxTimes(1).
+				MinTimes(1)
 
 			mockRepo.EXPECT().
 				List(ctx, limit, offset).
 				Return(requests, nil).
 				MaxTimes(1).
 				MinTimes(1)
+
+			mockProducer.EXPECT().
+				Send(ctx, gomock.Any()).
+				MaxTimes(3).
+				MinTimes(3)
+
 			resp, err := requestApi.ListRequestV1(
 				ctx, &desc.ListRequestsV1Request{
 					Offset: offset, Limit: limit,
@@ -192,6 +258,17 @@ var _ = Describe("Flusher", func() {
 				Return(nil).
 				MaxTimes(1).
 				MinTimes(1)
+
+			mockProm.EXPECT().
+				IncUpdate(uint(1), "UpdateRequestV1").
+				MaxTimes(1).
+				MinTimes(1)
+
+			mockProducer.EXPECT().
+				Send(ctx, gomock.Any()).
+				MaxTimes(1).
+				MinTimes(1)
+
 			resp, err := requestApi.UpdateRequestV1(
 				ctx, &desc.UpdateRequestV1Request{
 					RequestId: req.Id,
@@ -228,6 +305,17 @@ var _ = Describe("Flusher", func() {
 				Return(nil).
 				MaxTimes(1).
 				MinTimes(1)
+
+			mockProm.EXPECT().
+				IncRemove(uint(1), "RemoveRequestV1").
+				MaxTimes(1).
+				MinTimes(1)
+
+			mockProducer.EXPECT().
+				Send(ctx, gomock.Any()).
+				MaxTimes(1).
+				MinTimes(1)
+
 			resp, err := requestApi.RemoveRequestV1(
 				ctx, &desc.RemoveRequestV1Request{
 					RequestId: requestId,
@@ -265,6 +353,17 @@ var _ = Describe("Flusher", func() {
 				Return(&req, nil).
 				MaxTimes(1).
 				MinTimes(1)
+
+			mockProm.EXPECT().
+				IncRead(uint(1), "DescribeRequestV1").
+				MaxTimes(1).
+				MinTimes(1)
+
+			mockProducer.EXPECT().
+				Send(ctx, gomock.Any()).
+				MaxTimes(1).
+				MinTimes(1)
+
 			resp, err := requestApi.DescribeRequestV1(
 				ctx, &desc.DescribeRequestV1Request{
 					RequestId: req.Id,

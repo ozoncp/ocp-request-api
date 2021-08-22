@@ -1009,3 +1009,74 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = RequestValidationError{}
+
+// Validate checks the field values on RequestAPIEvent with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *RequestAPIEvent) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for RequestId
+
+	// no validation rules for Event
+
+	// no validation rules for Error
+
+	return nil
+}
+
+// RequestAPIEventValidationError is the validation error returned by
+// RequestAPIEvent.Validate if the designated constraints aren't met.
+type RequestAPIEventValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RequestAPIEventValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RequestAPIEventValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RequestAPIEventValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RequestAPIEventValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RequestAPIEventValidationError) ErrorName() string { return "RequestAPIEventValidationError" }
+
+// Error satisfies the builtin error interface
+func (e RequestAPIEventValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRequestAPIEvent.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RequestAPIEventValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RequestAPIEventValidationError{}
