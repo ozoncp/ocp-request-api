@@ -129,7 +129,6 @@ func run() error {
 
 	s := grpc.NewServer()
 	reqApi := buildRequestApi()
-	defer reqApi.Shutdown()
 
 	desc.RegisterOcpRequestApiServer(s, reqApi)
 

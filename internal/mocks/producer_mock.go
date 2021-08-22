@@ -34,26 +34,18 @@ func (m *MockProducer) EXPECT() *MockProducerMockRecorder {
 	return m.recorder
 }
 
-// Close mocks base method.
-func (m *MockProducer) Close() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Close")
-}
-
-// Close indicates an expected call of Close.
-func (mr *MockProducerMockRecorder) Close() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockProducer)(nil).Close))
-}
-
 // Send mocks base method.
-func (m *MockProducer) Send(arg0 producer.EventMsg) {
+func (m *MockProducer) Send(arg0 ...producer.EventMsg) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Send", arg0)
+	varargs := []interface{}{}
+	for _, a := range arg0 {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "Send", varargs...)
 }
 
 // Send indicates an expected call of Send.
-func (mr *MockProducerMockRecorder) Send(arg0 interface{}) *gomock.Call {
+func (mr *MockProducerMockRecorder) Send(arg0 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockProducer)(nil).Send), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockProducer)(nil).Send), arg0...)
 }

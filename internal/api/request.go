@@ -50,7 +50,7 @@ func (r *RequestAPI) ListRequestV1(ctx context.Context, req *desc.ListRequestsV1
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ListRequestV1")
 	defer span.Finish()
 
-	if err := r.validateAndSendErrorEvent(ctx, req, producer.Read); err != nil {
+	if err := r.validateAndSendErrorEvent(ctx, req, producer.ReadEvent); err != nil {
 		return nil, err
 	}
 	requests, err := r.repo.List(ctx, req.Limit, req.Offset)
@@ -62,11 +62,12 @@ func (r *RequestAPI) ListRequestV1(ctx context.Context, req *desc.ListRequestsV1
 			Uint64("limit", req.Limit).
 			Uint64("offset", req.Offset).
 			Msgf("Failed to list requests")
-		r.notifyApiEvent(ctx, 0, producer.Read, err)
+		r.producer.Send(producer.NewEvent(ctx, 0, producer.ReadEvent, err))
 		return nil, err
 	}
 
 	ret := make([]*desc.Request, 0, len(requests))
+	eventMsgs := make([]producer.EventMsg, 0, len(requests))
 
 	for _, req := range requests {
 		ret = append(ret, &desc.Request{
@@ -75,7 +76,8 @@ func (r *RequestAPI) ListRequestV1(ctx context.Context, req *desc.ListRequestsV1
 			Type:   req.Type,
 			Text:   req.Text,
 		})
-		r.notifyApiEvent(ctx, req.Id, producer.Read, nil)
+		eventMsgs = append(eventMsgs, producer.NewEvent(ctx, req.Id, producer.ReadEvent, nil))
+		r.producer.Send(eventMsgs...)
 
 	}
 	r.metrics.IncList(1, "ListRequestV1")
@@ -90,7 +92,7 @@ func (r *RequestAPI) DescribeRequestV1(ctx context.Context, req *desc.DescribeRe
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DescribeRequestV1")
 	defer span.Finish()
 
-	if err := r.validateAndSendErrorEvent(ctx, req, producer.Read); err != nil {
+	if err := r.validateAndSendErrorEvent(ctx, req, producer.ReadEvent); err != nil {
 		return nil, err
 	}
 
@@ -107,7 +109,7 @@ func (r *RequestAPI) DescribeRequestV1(ctx context.Context, req *desc.DescribeRe
 		return nil, err
 	}
 
-	r.notifyApiEvent(ctx, req.RequestId, producer.Read, err)
+	r.producer.Send(producer.NewEvent(ctx, req.RequestId, producer.ReadEvent, err))
 	r.metrics.IncRead(1, "DescribeRequestV1")
 
 	return &desc.DescribeRequestV1Response{
@@ -127,7 +129,7 @@ func (r *RequestAPI) CreateRequestV1(ctx context.Context, req *desc.CreateReques
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateRequestV1")
 	defer span.Finish()
 
-	if err := r.validateAndSendErrorEvent(ctx, req, producer.Create); err != nil {
+	if err := r.validateAndSendErrorEvent(ctx, req, producer.CreateEvent); err != nil {
 		return nil, err
 	}
 
@@ -147,7 +149,7 @@ func (r *RequestAPI) CreateRequestV1(ctx context.Context, req *desc.CreateReques
 		return nil, err
 	}
 
-	r.notifyApiEvent(ctx, newId, producer.Create, err)
+	r.producer.Send(producer.NewEvent(ctx, newId, producer.CreateEvent, err))
 	r.metrics.IncCreate(1, "CreateRequestV1")
 	return &desc.CreateRequestV1Response{
 		RequestId: newId,
@@ -160,7 +162,7 @@ func (r *RequestAPI) MultiCreateRequestV1(ctx context.Context, req *desc.MultiCr
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MultiCreateRequestV1")
 	defer span.Finish()
 
-	if err := r.validateAndSendErrorEvent(ctx, req, producer.Create); err != nil {
+	if err := r.validateAndSendErrorEvent(ctx, req, producer.CreateEvent); err != nil {
 		return nil, err
 	}
 
@@ -192,7 +194,7 @@ func (r *RequestAPI) RemoveRequestV1(ctx context.Context, req *desc.RemoveReques
 	span, ctx := opentracing.StartSpanFromContext(ctx, "RemoveRequestV1")
 	defer span.Finish()
 
-	if err := r.validateAndSendErrorEvent(ctx, req, producer.Delete); err != nil {
+	if err := r.validateAndSendErrorEvent(ctx, req, producer.DeleteEvent); err != nil {
 		return nil, err
 	}
 
@@ -207,7 +209,7 @@ func (r *RequestAPI) RemoveRequestV1(ctx context.Context, req *desc.RemoveReques
 			Msgf("Failed to remove request")
 		return nil, err
 	}
-	r.notifyApiEvent(ctx, req.RequestId, producer.Delete, err)
+	r.producer.Send(producer.NewEvent(ctx, req.RequestId, producer.DeleteEvent, err))
 	r.metrics.IncRemove(1, "RemoveRequestV1")
 	return &desc.RemoveRequestV1Response{}, nil
 }
@@ -218,7 +220,7 @@ func (r *RequestAPI) UpdateRequestV1(ctx context.Context, req *desc.UpdateReques
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateRequestV1")
 	defer span.Finish()
 
-	if err := r.validateAndSendErrorEvent(ctx, req, producer.Update); err != nil {
+	if err := r.validateAndSendErrorEvent(ctx, req, producer.UpdateEvent); err != nil {
 		return nil, err
 	}
 
@@ -236,24 +238,14 @@ func (r *RequestAPI) UpdateRequestV1(ctx context.Context, req *desc.UpdateReques
 		return nil, err
 	}
 
-	r.notifyApiEvent(ctx, req.RequestId, producer.Update, err)
+	r.producer.Send(producer.NewEvent(ctx, req.RequestId, producer.UpdateEvent, err))
 	r.metrics.IncUpdate(1, "UpdateRequestV1")
 	return &desc.UpdateRequestV1Response{}, nil
 }
 
-// Shutdown executes on exist. Just makes sure all events are sent to Kafka.
-func (r *RequestAPI) Shutdown() {
-	r.producer.Close()
-}
-
-func (r *RequestAPI) notifyApiEvent(ctx context.Context, requestId uint64, eventType producer.EventType, apiErr error) {
-	event := producer.NewEvent(ctx, requestId, eventType, apiErr)
-	r.producer.Send(event)
-}
-
 func (r *RequestAPI) validateAndSendErrorEvent(ctx context.Context, req validator, event producer.EventType) error {
 	if err := req.Validate(); err != nil {
-		r.notifyApiEvent(ctx, 0, event, err)
+		r.producer.Send(producer.NewEvent(ctx, 0, event, err))
 		return status.Error(codes.InvalidArgument, err.Error())
 	}
 	return nil
@@ -268,11 +260,11 @@ func (r *RequestAPI) createRequestsBatch(ctx context.Context, batch []models.Req
 		log.Error().
 			Err(err).
 			Msgf("Failed to save requests")
-		r.notifyApiEvent(ctx, 0, producer.Create, err)
+		r.producer.Send(producer.NewEvent(ctx, 0, producer.CreateEvent, err))
 		return nil, err
 	}
 	for _, id := range ids {
-		r.notifyApiEvent(childCtx, id, producer.Create, nil)
+		r.producer.Send(producer.NewEvent(ctx, id, producer.CreateEvent, nil))
 	}
 	return ids, nil
 }

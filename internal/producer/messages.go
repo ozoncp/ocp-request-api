@@ -12,10 +12,10 @@ import (
 type EventType int
 
 const (
-	Create EventType = iota
-	Read
-	Update
-	Delete
+	CreateEvent EventType = iota
+	ReadEvent
+	UpdateEvent
+	DeleteEvent
 )
 
 type EventMsg interface {
@@ -59,13 +59,13 @@ func (e *event) Encode() ([]byte, error) {
 	}
 
 	switch e.eventType {
-	case Create:
+	case CreateEvent:
 		message.Event = desc.RequestAPIEvent_CREATE
-	case Read:
+	case ReadEvent:
 		message.Event = desc.RequestAPIEvent_READ
-	case Update:
+	case UpdateEvent:
 		message.Event = desc.RequestAPIEvent_UPDATE
-	case Delete:
+	case DeleteEvent:
 		message.Event = desc.RequestAPIEvent_DELETE
 	default:
 		log.Panic().Msgf("unexpected event type: %v", e.eventType)
