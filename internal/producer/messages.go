@@ -43,14 +43,20 @@ func NewEvent(ctx context.Context, requestId uint64, eventType EventType, err er
 }
 
 type event struct {
-	requestId uint64
-	eventType EventType
-	err       error
-	traceId   string
-	span      map[string]string
+	requestId   uint64
+	eventType   EventType
+	err         error
+	traceId     string
+	span        map[string]string
+	encodedData []byte //caching to avoid double encoding on Length() and Encode()
+	encodeErr   error
 }
 
 func (e *event) Encode() ([]byte, error) {
+	if e.encodedData != nil || e.encodeErr != nil {
+		return e.encodedData, e.encodeErr
+	}
+
 	message := &desc.RequestAPIEvent{
 		RequestId: e.requestId,
 	}
@@ -74,12 +80,11 @@ func (e *event) Encode() ([]byte, error) {
 	if len(e.span) > 0 {
 		message.TraceSpan = e.span
 	}
-
-	return proto.Marshal(message)
+	e.encodedData, e.encodeErr = proto.Marshal(message)
+	return e.encodedData, e.encodeErr
 }
 
 func (e *event) Length() int {
-	// todo strange we have to encode again to get length...but leave for now as is (can cache data or something)
 	data, _ := e.Encode()
 	return len(data)
 }
