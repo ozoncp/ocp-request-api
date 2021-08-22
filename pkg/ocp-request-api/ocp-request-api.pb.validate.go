@@ -1024,6 +1024,8 @@ func (m *RequestAPIEvent) Validate() error {
 
 	// no validation rules for Error
 
+	// no validation rules for TraceSpan
+
 	return nil
 }
 

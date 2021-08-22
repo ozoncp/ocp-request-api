@@ -5,6 +5,7 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/opentracing/opentracing-go"
 	"github.com/ozoncp/ocp-request-api/internal/api"
 	"github.com/ozoncp/ocp-request-api/internal/mocks"
 	"github.com/ozoncp/ocp-request-api/internal/models"
@@ -13,6 +14,20 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+type AnyContextType struct {
+}
+
+func (c AnyContextType) Matches(val interface{}) bool {
+	if _, ok := val.(context.Context); ok {
+		return true
+	}
+	return false
+}
+
+func (c AnyContextType) String() string {
+	return "Asserts parameter is a context.Context type"
+}
 
 var _ = Describe("Flusher", func() {
 
@@ -24,6 +39,8 @@ var _ = Describe("Flusher", func() {
 		mockProm     *mocks.MockMetricsReporter
 		mockProducer *mocks.MockProducer
 	)
+
+	ctxType := AnyContextType{}
 
 	BeforeEach(func() {
 		mockCtrl = gomock.NewController(GinkgoT())
@@ -39,14 +56,20 @@ var _ = Describe("Flusher", func() {
 
 	Context("Add new item and return its id", func() {
 		JustBeforeEach(func() {
-			requestApi = api.NewRequestApi(mockRepo, 2, mockProm, mockProducer)
+			requestApi = api.NewRequestApi(
+				mockRepo,
+				2,
+				mockProm,
+				mockProducer,
+				opentracing.NoopTracer{},
+			)
 			ctx = context.Background()
 		})
 
 		It("Add request with no error", func() {
 			newRequestId := uint64(19)
 			mockRepo.EXPECT().
-				Add(ctx, gomock.Any()).
+				Add(ctxType, gomock.Any()).
 				Return(newRequestId, nil).
 				MaxTimes(1).
 				MinTimes(1)
@@ -57,7 +80,7 @@ var _ = Describe("Flusher", func() {
 				MinTimes(1)
 
 			mockProducer.EXPECT().
-				Send(ctx, gomock.Any()).
+				Send(gomock.Any()).
 				MaxTimes(1).
 				MinTimes(1)
 
@@ -104,13 +127,13 @@ var _ = Describe("Flusher", func() {
 			}
 
 			mockRepo.EXPECT().
-				AddMany(ctx, requestsToCreate[:2]).
+				AddMany(ctxType, requestsToCreate[:2]).
 				Return([]uint64{1, 2}, nil).
 				MaxTimes(1).
 				MinTimes(1)
 
 			mockRepo.EXPECT().
-				AddMany(ctx, requestsToCreate[2:]).
+				AddMany(ctxType, requestsToCreate[2:]).
 				Return([]uint64{3}, nil).
 				MaxTimes(1).
 				MinTimes(1)
@@ -126,7 +149,7 @@ var _ = Describe("Flusher", func() {
 				MinTimes(1)
 
 			mockProducer.EXPECT().
-				Send(ctx, gomock.Any()).
+				Send(gomock.Any()).
 				MaxTimes(3).
 				MinTimes(3)
 
@@ -144,7 +167,7 @@ var _ = Describe("Flusher", func() {
 
 		It("Add() params validation", func() {
 			mockProducer.EXPECT().
-				Send(ctx, gomock.Any()).
+				Send(gomock.Any()).
 				MaxTimes(1).
 				MinTimes(1)
 
@@ -158,7 +181,7 @@ var _ = Describe("Flusher", func() {
 
 		It("Remove() params validation", func() {
 			mockProducer.EXPECT().
-				Send(ctx, gomock.Any()).
+				Send(gomock.Any()).
 				MaxTimes(1).
 				MinTimes(1)
 
@@ -172,7 +195,7 @@ var _ = Describe("Flusher", func() {
 
 		It("Describe() params validation", func() {
 			mockProducer.EXPECT().
-				Send(ctx, gomock.Any()).
+				Send(gomock.Any()).
 				MaxTimes(1).
 				MinTimes(1)
 
@@ -186,7 +209,7 @@ var _ = Describe("Flusher", func() {
 
 		It("List() params validation", func() {
 			mockProducer.EXPECT().
-				Send(ctx, gomock.Any()).
+				Send(gomock.Any()).
 				MaxTimes(2).
 				MinTimes(2)
 
@@ -217,13 +240,13 @@ var _ = Describe("Flusher", func() {
 				MinTimes(1)
 
 			mockRepo.EXPECT().
-				List(ctx, limit, offset).
+				List(ctxType, limit, offset).
 				Return(requests, nil).
 				MaxTimes(1).
 				MinTimes(1)
 
 			mockProducer.EXPECT().
-				Send(ctx, gomock.Any()).
+				Send(gomock.Any()).
 				MaxTimes(3).
 				MinTimes(3)
 
@@ -254,7 +277,7 @@ var _ = Describe("Flusher", func() {
 		It("Update existing request", func() {
 			req := models.NewRequest(1, 10, 100, "one")
 			mockRepo.EXPECT().
-				Update(ctx, req).
+				Update(ctxType, req).
 				Return(nil).
 				MaxTimes(1).
 				MinTimes(1)
@@ -265,7 +288,7 @@ var _ = Describe("Flusher", func() {
 				MinTimes(1)
 
 			mockProducer.EXPECT().
-				Send(ctx, gomock.Any()).
+				Send(gomock.Any()).
 				MaxTimes(1).
 				MinTimes(1)
 
@@ -286,7 +309,7 @@ var _ = Describe("Flusher", func() {
 		It("Remove non-existing request with no errors", func() {
 			requestId := uint64(19)
 			mockRepo.EXPECT().
-				Remove(ctx, requestId).
+				Remove(ctxType, requestId).
 				Return(repo.NotFound).
 				MaxTimes(1).
 				MinTimes(1)
@@ -301,7 +324,7 @@ var _ = Describe("Flusher", func() {
 		It("Remove existing request with no errors", func() {
 			requestId := uint64(19)
 			mockRepo.EXPECT().
-				Remove(ctx, requestId).
+				Remove(ctxType, requestId).
 				Return(nil).
 				MaxTimes(1).
 				MinTimes(1)
@@ -312,7 +335,7 @@ var _ = Describe("Flusher", func() {
 				MinTimes(1)
 
 			mockProducer.EXPECT().
-				Send(ctx, gomock.Any()).
+				Send(gomock.Any()).
 				MaxTimes(1).
 				MinTimes(1)
 
@@ -329,7 +352,7 @@ var _ = Describe("Flusher", func() {
 		It("Remove non-existing request with no errors", func() {
 			requestId := uint64(19)
 			mockRepo.EXPECT().
-				Remove(ctx, requestId).
+				Remove(ctxType, requestId).
 				Return(repo.NotFound).
 				MaxTimes(1).
 				MinTimes(1)
@@ -349,7 +372,7 @@ var _ = Describe("Flusher", func() {
 				Text:   "one",
 			}
 			mockRepo.EXPECT().
-				Describe(ctx, req.Id).
+				Describe(ctxType, req.Id).
 				Return(&req, nil).
 				MaxTimes(1).
 				MinTimes(1)
@@ -360,7 +383,7 @@ var _ = Describe("Flusher", func() {
 				MinTimes(1)
 
 			mockProducer.EXPECT().
-				Send(ctx, gomock.Any()).
+				Send(gomock.Any()).
 				MaxTimes(1).
 				MinTimes(1)
 
@@ -386,7 +409,7 @@ var _ = Describe("Flusher", func() {
 		It("Describe non-existing request", func() {
 			requestId := uint64(19)
 			mockRepo.EXPECT().
-				Describe(ctx, requestId).
+				Describe(ctxType, requestId).
 				Return(nil, repo.NotFound).
 				MaxTimes(1).
 				MinTimes(1)

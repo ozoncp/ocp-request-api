@@ -1,7 +1,6 @@
 package producer
 
 import (
-	"context"
 	"github.com/Shopify/sarama"
 	"github.com/rs/zerolog/log"
 	"time"
@@ -13,7 +12,7 @@ const (
 )
 
 type Producer interface {
-	Send(ctx context.Context, msg EventMsg)
+	Send(msg EventMsg)
 }
 
 func NewProducer(topic string, kafkaProducer sarama.SyncProducer) Producer {
@@ -55,7 +54,7 @@ func (p *producer) Init() {
 	}()
 }
 
-func (p *producer) Send(ctx context.Context, msg EventMsg) {
+func (p *producer) Send(msg EventMsg) {
 	p.queue <- msg
 }
 

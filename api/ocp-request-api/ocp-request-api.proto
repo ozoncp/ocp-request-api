@@ -146,4 +146,5 @@ message RequestAPIEvent {
   }
   EventType event = 2;
   string error = 3;
+  map<string, string> trace_span = 4;
 }

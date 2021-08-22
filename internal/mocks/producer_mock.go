@@ -5,11 +5,10 @@
 package mocks
 
 import (
-	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	messaging "github.com/ozoncp/ocp-request-api/internal/producer"
+	producer "github.com/ozoncp/ocp-request-api/internal/producer"
 )
 
 // MockProducer is a mock of Producer interface.
@@ -36,13 +35,13 @@ func (m *MockProducer) EXPECT() *MockProducerMockRecorder {
 }
 
 // Send mocks base method.
-func (m *MockProducer) Send(arg0 context.Context, arg1 messaging.EventMsg) {
+func (m *MockProducer) Send(arg0 producer.EventMsg) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Send", arg0, arg1)
+	m.ctrl.Call(m, "Send", arg0)
 }
 
 // Send indicates an expected call of Send.
-func (mr *MockProducerMockRecorder) Send(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockProducerMockRecorder) Send(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockProducer)(nil).Send), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockProducer)(nil).Send), arg0)
 }
