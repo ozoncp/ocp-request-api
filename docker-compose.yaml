@@ -41,7 +41,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - "./metrics.yml:/etc/metrics/metrics.yml"
+      - "./prometheus.yml:/etc/metrics/prometheus.yml"
 
   jaeger:
     image: jaegertracing/all-in-one:latest
