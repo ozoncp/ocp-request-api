@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/opentracing/opentracing-go"
+	traceLog "github.com/opentracing/opentracing-go/log"
 	"github.com/ozoncp/ocp-request-api/internal/metrics"
 	"github.com/ozoncp/ocp-request-api/internal/models"
 	"github.com/ozoncp/ocp-request-api/internal/producer"
@@ -175,7 +176,7 @@ func (r *RequestAPI) MultiCreateRequestV1(ctx context.Context, req *desc.MultiCr
 	newIds := make([]uint64, 0, len(req.Requests))
 
 	for _, batch := range utils.SplitToBulks(toCreate, r.batchSize) {
-		ids, err := r.createRequestsBatch(ctx, batch)
+		ids, err := r.writeRequestsBatch(ctx, batch)
 		if err != nil {
 			return nil, err
 		}
@@ -251,8 +252,9 @@ func (r *RequestAPI) validateAndSendErrorEvent(ctx context.Context, req validato
 	return nil
 }
 
-func (r *RequestAPI) createRequestsBatch(ctx context.Context, batch []models.Request) ([]uint64, error) {
+func (r *RequestAPI) writeRequestsBatch(ctx context.Context, batch []models.Request) ([]uint64, error) {
 	childSpan, childCtx := opentracing.StartSpanFromContext(ctx, "MultiCreateRequestV1Batch")
+	childSpan.LogFields(traceLog.Int("batch_size", len(batch)))
 	defer childSpan.Finish()
 
 	ids, err := r.repo.AddMany(childCtx, batch)
