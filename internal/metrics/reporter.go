@@ -24,8 +24,24 @@ type promReporter struct {
 func NewMetricsReporter() MetricsReporter {
 	return &promReporter{
 		createCounter: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "requests_objects_reads",
-			Help: "The total number of reads of requests",
+			Name: "requests_objects_create",
+			Help: "The total number of create requests",
+		}, []string{"handler"}),
+		readCounter: promauto.NewCounterVec(prometheus.CounterOpts{
+			Name: "requests_objects_read",
+			Help: "The total number of reads requests",
+		}, []string{"handler"}),
+		updateCounter: promauto.NewCounterVec(prometheus.CounterOpts{
+			Name: "requests_objects_update",
+			Help: "The total number of update requests",
+		}, []string{"handler"}),
+		removeCounter: promauto.NewCounterVec(prometheus.CounterOpts{
+			Name: "requests_objects_remove",
+			Help: "The total number of remove requests",
+		}, []string{"handler"}),
+		listCounter: promauto.NewCounterVec(prometheus.CounterOpts{
+			Name: "requests_objects_list",
+			Help: "The total number of list requests",
 		}, []string{"handler"}),
 	}
 }
