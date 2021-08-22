@@ -142,11 +142,21 @@ func (r *repo) Remove(ctx context.Context, id uint64) error {
 // Update updates existing request.Returns NotFound error if request doesn't exist,
 func (r *repo) Update(ctx context.Context, request models.Request) error {
 	query := r.stmBuilder.
-		Update("requests").
-		Set("user_id", request.UserId).
-		Set("type", request.Type).
-		Set("text", request.Text).
-		Where("id = ?", request.Id)
+		Update("requests")
+
+	if request.UserId != 0 {
+		query = query.Set("user_id", request.UserId)
+	}
+
+	if request.Type != 0 {
+		query = query.Set("type", request.Type)
+	}
+
+	if request.Text != "" {
+		query = query.Set("text", request.Text)
+	}
+
+	query = query.Where("id = ?", request.Id)
 	ret, err := query.ExecContext(ctx)
 
 	if err != nil {
