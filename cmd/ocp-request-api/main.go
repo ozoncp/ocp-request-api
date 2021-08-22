@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"github.com/Shopify/sarama"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/opentracing/opentracing-go"
+	"github.com/ozoncp/ocp-request-api/internal/api"
 	"github.com/ozoncp/ocp-request-api/internal/db"
 	"github.com/ozoncp/ocp-request-api/internal/metrics"
 	prod "github.com/ozoncp/ocp-request-api/internal/producer"
@@ -10,19 +13,15 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 	"github.com/uber/jaeger-client-go"
+	jaegercfg "github.com/uber/jaeger-client-go/config"
+	jaegerlog "github.com/uber/jaeger-client-go/log"
+	jaegermetrics "github.com/uber/jaeger-lib/metrics"
+	"google.golang.org/grpc"
 	"net"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/Shopify/sarama"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/ozoncp/ocp-request-api/internal/api"
-	jaegercfg "github.com/uber/jaeger-client-go/config"
-	jaegerlog "github.com/uber/jaeger-client-go/log"
-	jaegermetrics "github.com/uber/jaeger-lib/metrics"
-	"google.golang.org/grpc"
 
 	desc "github.com/ozoncp/ocp-request-api/pkg/ocp-request-api"
 )
@@ -32,6 +31,24 @@ const (
 	grpcServerEndpoint = "localhost:82"
 	kafkaTopic         = "ocp_request_events"
 )
+
+var serviceConfig config
+
+type config struct {
+	databaseDSN           string
+	kafkaBrokers          []string
+	requestWriteBatchSize uint
+	jaegerHostPort        string
+}
+
+func init() {
+	serviceConfig = config{
+		databaseDSN:           mustGetEnvString("OCP_REQUEST_DSN"),
+		kafkaBrokers:          strings.Split(mustGetEnvString("OCP_KAFKA_BROKERS"), ","),
+		requestWriteBatchSize: uint(mustGetEnvUInt("OCP_REQUEST_BATCH_SIZE")),
+		jaegerHostPort:        mustGetEnvString("OCP_REQUEST_JAEGER_HOST_PORT"),
+	}
+}
 
 func mustGetEnvString(name string) string {
 	envVal := os.Getenv(name)
@@ -51,17 +68,16 @@ func mustGetEnvUInt(name string) uint64 {
 }
 
 func buildKafkaProducer() prod.Producer {
-	brokersRaw := mustGetEnvString("OCP_KAFKA_BROKERS")
-	brokers := strings.Split(brokersRaw, ",")
+	brokers := serviceConfig.kafkaBrokers
 
-	config := sarama.NewConfig()
-	config.Producer.Partitioner = sarama.NewRandomPartitioner
-	config.Producer.RequiredAcks = sarama.WaitForAll
-	config.Producer.Return.Successes = true
-	producer, err := sarama.NewSyncProducer(brokers, config)
+	cfg := sarama.NewConfig()
+	cfg.Producer.Partitioner = sarama.NewRandomPartitioner
+	cfg.Producer.RequiredAcks = sarama.WaitForAll
+	cfg.Producer.Return.Successes = true
+	producer, err := sarama.NewSyncProducer(brokers, cfg)
 
 	if err != nil {
-		log.Panic().Msgf("failed to connecto to Kafka brokers: %v", err)
+		log.Panic().Msgf("failed to connect to Kafka brokers: %v", err)
 	}
 
 	return prod.NewProducer(kafkaTopic, producer)
@@ -75,7 +91,8 @@ func initTracing() {
 			Param: 1,
 		},
 		Reporter: &jaegercfg.ReporterConfig{
-			LogSpans: true,
+			LocalAgentHostPort: serviceConfig.jaegerHostPort,
+			LogSpans:           true,
 		},
 	}
 
@@ -93,10 +110,9 @@ func initTracing() {
 }
 
 func buildRequestApi() *api.RequestAPI {
-	dsn := mustGetEnvString("OCP_REQUEST_DSN")
-	database := db.Connect(dsn)
+	database := db.Connect(serviceConfig.databaseDSN)
 
-	batchSize := uint(mustGetEnvUInt("OCP_REQUEST_BATCH_SIZE"))
+	batchSize := serviceConfig.requestWriteBatchSize
 	repo := repository.NewRepo(database)
 	prom := metrics.NewMetricsReporter()
 	producer := buildKafkaProducer()
