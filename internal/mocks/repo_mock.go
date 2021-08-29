@@ -51,11 +51,12 @@ func (mr *MockRepoMockRecorder) Add(arg0, arg1 interface{}) *gomock.Call {
 }
 
 // AddMany mocks base method.
-func (m *MockRepo) AddMany(arg0 context.Context, arg1 []models.Request) error {
+func (m *MockRepo) AddMany(arg0 context.Context, arg1 []models.Request) ([]uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddMany", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].([]uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // AddMany indicates an expected call of AddMany.
@@ -95,16 +96,29 @@ func (mr *MockRepoMockRecorder) List(arg0, arg1, arg2 interface{}) *gomock.Call 
 }
 
 // Remove mocks base method.
-func (m *MockRepo) Remove(arg0 context.Context, arg1 uint64) (bool, error) {
+func (m *MockRepo) Remove(arg0 context.Context, arg1 uint64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Remove", arg0, arg1)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Remove indicates an expected call of Remove.
 func (mr *MockRepoMockRecorder) Remove(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remove", reflect.TypeOf((*MockRepo)(nil).Remove), arg0, arg1)
+}
+
+// Update mocks base method.
+func (m *MockRepo) Update(arg0 context.Context, arg1 models.Request) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockRepoMockRecorder) Update(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockRepo)(nil).Update), arg0, arg1)
 }

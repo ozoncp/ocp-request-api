@@ -31,9 +31,12 @@ To run tests execute `make test` from repository root.
 ### To build and run with Docker
 
 - Build docker image `docker build . -t ocp-request-api`
-- Run `docker run -p 82:82 ocp-request-api`
+- Run `docker run -v "OCP_REQUEST_DSN=<pgsql dsn>" -v "OCP_REQUEST_BATCH_SIZE=1000" -v "OCP_KAFKA_BROKERS=kafka:9094" -v "OCP_REQUEST_JAEGER_HOST_PORT=jaeger:6831"  -p 82:82 ocp-request-api`
 
 ### ENV variables
 
-- `OCP_REQUEST_API` (default "postgres://postgres:12345@localhost:5432/postgres?sslmode=disable") - defines connection to Postresql.
+- `OCP_REQUEST_DSN` - defines connection to Postresql (in form of Golang's sql DSN). 
+- `OCP_REQUEST_BATCH_SIZE` - Controls batch size of multi create endpoint.
+- `OCP_KAFKA_BROKERS` - A comma separate list of Kafka brokers addresses (e.g. host:ip,host:ip)
+- `OCP_REQUEST_JAEGER_HOST_PORT` - Jaeger host and port (e.g. host:ip)
 

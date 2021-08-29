@@ -127,10 +127,10 @@ var _ = Describe("Saver", func() {
 			}
 		})
 
-		It("Must call Init() before", func() {
+		It("Must call init() before", func() {
 			Expect(func() {
 				sav.Save(models.Request{})
-			}).To(PanicWith("Saver instance is not Init()-ed"))
+			}).To(PanicWith("Saver instance is not init()-ed"))
 
 		})
 
@@ -147,7 +147,7 @@ var _ = Describe("Saver", func() {
 			}).To(PanicWith("Saver instance is closed"))
 		})
 
-		It("Cannot Init() after Close()", func() {
+		It("Cannot init() after Close()", func() {
 			mockFlusher.EXPECT().
 				Flush(ctx, []models.Request{}).
 				Return(nil, nil).
@@ -160,10 +160,10 @@ var _ = Describe("Saver", func() {
 			}).To(PanicWith("Saver instance is closed"))
 		})
 
-		It("Cannot Close() before Init()", func() {
+		It("Cannot Close() before init()", func() {
 			Expect(func() {
 				sav.Close()
-			}).To(PanicWith("Saver instance is not Init()-ed"))
+			}).To(PanicWith("Saver instance is not init()-ed"))
 		})
 
 	})

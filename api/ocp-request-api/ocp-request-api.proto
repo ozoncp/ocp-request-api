@@ -3,7 +3,7 @@ syntax = "proto3";
 import "google/api/annotations.proto";
 import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
 
-package ocp.task.api;
+package ocp.request.api;
 
 option go_package = "github.com/ozoncp/ocp-request-api/pkg/ocp-request-api;ocp_request_api";
 
@@ -24,8 +24,25 @@ service OcpRequestApi {
     };
   }
 
+  // UpdateRequestV1 updates request data
+  rpc UpdateRequestV1(UpdateRequestV1Request) returns (UpdateRequestV1Response) {
+    option (google.api.http) = {
+      put: "/v1/requests/{request_id}"
+      body: "*"
+    };
+  }
+
   // CreateRequestV1 creates new request. Returns id of created object.
   rpc CreateRequestV1(CreateRequestV1Request) returns (CreateRequestV1Response) {
+    option (google.api.http) = {
+      post: "/v1/requests"
+      body: "*"
+    };
+  }
+
+  // MultiCreateRequestV1 creates multiple requests.
+  // Returns array of new ids in corresponding order.
+  rpc MultiCreateRequestV1(MultiCreateRequestV1Request) returns (MultiCreateRequestV1Response) {
     option (google.api.http) = {
       post: "/v1/requests"
       body: "*"
@@ -52,6 +69,28 @@ message ListRequestsV1Response {
   repeated Request requests = 1;
 }
 
+// Contains a batch of new requests to create.
+message MultiCreateRequestV1Request {
+  repeated CreateRequestV1Request requests = 1;
+}
+
+// Api returns created requests ids
+message MultiCreateRequestV1Response {
+  repeated uint64 request_ids = 1;
+}
+
+// Updates request info
+message UpdateRequestV1Request {
+  uint64 request_id = 1 [(validate.rules).uint64.gt = 0];
+  uint64 user_id = 2 [(validate.rules).uint64.gt = 0];
+  uint64 type = 3;
+  string text = 4;
+}
+
+// Update response (Empty for now. Will return an error if request was not found).
+message UpdateRequestV1Response {
+
+}
 
 // Contains attributes values of the new Request object.
 message CreateRequestV1Request {
@@ -71,9 +110,9 @@ message RemoveRequestV1Request {
   uint64 request_id = 1 [(validate.rules).uint64.gt = 0];
 }
 
-// Indicates whether request exited and removed.
+// Remove response (Empty for now. Will return an error if request was not found)
 message RemoveRequestV1Response {
-  bool found = 1;
+
 }
 
 // Request id to fetch detailed information.
@@ -92,4 +131,20 @@ message Request {
   uint64 user_id = 2;
   uint64 type = 3;
   string text = 4;
+}
+
+
+// The below below related to API events that will be sent via Kafka
+
+message RequestAPIEvent {
+  uint64 request_id = 1;
+  enum EventType {
+    CREATE = 0;
+    READ = 1;
+    UPDATE = 2;
+    DELETE = 3;
+  }
+  EventType event = 2;
+  string error = 3;
+  map<string, string> trace_span = 4;
 }

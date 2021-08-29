@@ -117,7 +117,7 @@ func (s *saver) mustNotBeClosed() {
 
 func (s *saver) mustBeInitialized() {
 	if !s.isInited() {
-		panic("Saver instance is not Init()-ed")
+		panic("Saver instance is not init()-ed")
 	}
 }
 

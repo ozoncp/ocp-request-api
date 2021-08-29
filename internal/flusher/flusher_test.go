@@ -38,7 +38,7 @@ var _ = Describe("Flusher", func() {
 		It("Added all batches with a single call to repo.", func() {
 			mockRepo.EXPECT().
 				AddMany(ctx, gomock.Any()).
-				Return(nil).
+				Return([]uint64{}, nil).
 				MaxTimes(1).
 				MinTimes(1)
 
@@ -54,7 +54,7 @@ var _ = Describe("Flusher", func() {
 		It("Added all batches with a 2 calls against repo.", func() {
 			mockRepo.EXPECT().
 				AddMany(ctx, gomock.Any()).
-				Return(nil).
+				Return([]uint64{}, nil).
 				MaxTimes(2).
 				MinTimes(2)
 
@@ -71,7 +71,7 @@ var _ = Describe("Flusher", func() {
 		It("Added all batches with a 2 calls against repo. 1 items remained.", func() {
 			mockRepo.EXPECT().
 				AddMany(ctx, gomock.Any()).
-				Return(nil).
+				Return([]uint64{}, nil).
 				MaxTimes(3).
 				MinTimes(3)
 
@@ -97,7 +97,7 @@ var _ = Describe("Flusher", func() {
 		It("Failed to add all items", func() {
 			mockRepo.EXPECT().
 				AddMany(ctx, gomock.Any()).
-				Return(errors.New("failed to add")).
+				Return([]uint64{}, errors.New("failed to add")).
 				MaxTimes(1).
 				MinTimes(1)
 
@@ -115,15 +115,15 @@ var _ = Describe("Flusher", func() {
 
 			successFullCall1 := mockRepo.EXPECT().
 				AddMany(ctx, gomock.Any()).
-				Return(nil)
+				Return([]uint64{}, nil)
 
 			successFullCall2 := mockRepo.EXPECT().
 				AddMany(ctx, gomock.Any()).
-				Return(nil)
+				Return([]uint64{}, nil)
 
 			failedCall := mockRepo.EXPECT().
 				AddMany(ctx, gomock.Any()).
-				Return(errors.New("failed to add"))
+				Return([]uint64{}, errors.New("failed to add"))
 
 			gomock.InOrder(successFullCall1, successFullCall2, failedCall)
 

@@ -86,3 +86,4 @@ test:
 		go test internal/saver/* -v
 		go test internal/utils/* -v
 		go test internal/repo/* -v
+		go test internal/api/* -v
