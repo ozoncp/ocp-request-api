@@ -20,8 +20,10 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 
 	desc "github.com/ozoncp/ocp-request-api/pkg/ocp-request-api"
 )
@@ -109,30 +111,36 @@ func initTracing() {
 	opentracing.SetGlobalTracer(tracer)
 }
 
-func buildRequestApi() *api.RequestAPI {
-	database := db.Connect(serviceConfig.databaseDSN)
-
-	batchSize := serviceConfig.requestWriteBatchSize
-	repo := repository.NewRepo(database)
-	prom := metrics.NewMetricsReporter()
-	producer := buildKafkaProducer()
-	tracer := opentracing.GlobalTracer()
-
-	return api.NewRequestApi(repo, batchSize, prom, producer, tracer)
-}
-
 func run() error {
 	listen, err := net.Listen("tcp", grpcPort)
 	if err != nil {
 		log.Panic().Msgf("failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer()
-	reqApi := buildRequestApi()
+	grpcServer := grpc.NewServer()
 
-	desc.RegisterOcpRequestApiServer(s, reqApi)
+	database := db.Connect(serviceConfig.databaseDSN)
+	defer database.Close()
+	repo := repository.NewRepo(database)
+	prom := metrics.NewMetricsReporter()
+	producer := buildKafkaProducer()
+	defer producer.Close()
+	tracer := opentracing.GlobalTracer()
 
-	if err := s.Serve(listen); err != nil {
+	desc.RegisterOcpRequestApiServer(
+		grpcServer, api.NewRequestApi(repo, serviceConfig.requestWriteBatchSize, prom, producer, tracer),
+	)
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGTERM)
+
+	go func() {
+		<-sig
+		log.Info().Msgf("Got SIGTERM. Stopping...")
+		grpcServer.GracefulStop()
+	}()
+
+	if err := grpcServer.Serve(listen); err != nil {
 		log.Panic().Msgf("failed to serve: %v", err)
 	}
 
