@@ -31,7 +31,7 @@ To run tests execute `make test` from repository root.
 
 - Build docker image `docker build . -t ocp-request-api`
 -
-Run `docker run -v example-config.yaml:config.yaml  -p 82:82 ocp-request-api -c config.yaml`
+Run `docker run -v <path to config>.yaml:/root/config.yaml  -p 82:82 ocp-request-api /root/ocp-request-api -c config.yaml`
 
 ### Config
 
