@@ -34,6 +34,20 @@ func (m *MockProducer) EXPECT() *MockProducerMockRecorder {
 	return m.recorder
 }
 
+// Close mocks base method.
+func (m *MockProducer) Close() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Close")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Close indicates an expected call of Close.
+func (mr *MockProducerMockRecorder) Close() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockProducer)(nil).Close))
+}
+
 // Send mocks base method.
 func (m *MockProducer) Send(arg0 ...producer.EventMsg) {
 	m.ctrl.T.Helper()

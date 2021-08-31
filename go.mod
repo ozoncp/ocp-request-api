@@ -3,6 +3,7 @@ module github.com/ozoncp/ocp-request-api
 go 1.16
 
 require (
+	github.com/ClickHouse/clickhouse-go v1.4.7 // indirect
 	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
 	github.com/DataDog/zstd v1.3.6-0.20190409195224-796139022798 // indirect
 	github.com/Masterminds/squirrel v1.5.0 // indirect
@@ -24,7 +25,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/ozoncp/ocp-request-api/pkg/ocp-request-api v0.0.1
 	github.com/pkg/profile v1.2.1 // indirect
-	github.com/pressly/goose/v3 v3.0.1 // indirect
+	github.com/pressly/goose/v3 v3.1.0 // indirect
 	github.com/prometheus/client_golang v1.11.0 // indirect
 	github.com/rs/zerolog v1.23.0 // indirect
 	github.com/spf13/afero v1.6.0 // indirect

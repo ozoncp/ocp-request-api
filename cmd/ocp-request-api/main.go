@@ -12,6 +12,7 @@ import (
 	"github.com/ozoncp/ocp-request-api/internal/metrics"
 	prod "github.com/ozoncp/ocp-request-api/internal/producer"
 	repository "github.com/ozoncp/ocp-request-api/internal/repo"
+	"github.com/ozoncp/ocp-request-api/internal/search"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -146,9 +147,10 @@ func run() error {
 	producer := buildKafkaProducer()
 	defer producer.Close()
 	tracer := opentracing.GlobalTracer()
+	searcher := search.NewSearcher(database)
 
 	desc.RegisterOcpRequestApiServer(
-		grpcServer, api.NewRequestApi(repo, serviceConfig.General.tWriteBatchSize, prom, producer, tracer),
+		grpcServer, api.NewRequestApi(repo, serviceConfig.General.tWriteBatchSize, prom, producer, tracer, searcher),
 	)
 
 	sig := make(chan os.Signal, 1)
