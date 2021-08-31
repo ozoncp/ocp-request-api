@@ -34,7 +34,7 @@ func NewEvent(ctx context.Context, requestId uint64, eventType EventType, err er
 	span := opentracing.SpanFromContext(ctx)
 	if span != nil {
 		if err := opentracing.GlobalTracer().Inject(span.Context(), opentracing.TextMap, spanDump); err != nil {
-			log.Warn().Msgf("failed to update event message with span info", err)
+			log.Warn().Msgf("failed to update event message with span info: %v", err)
 		} else {
 			e.span = spanDump
 		}
