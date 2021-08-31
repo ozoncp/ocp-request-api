@@ -74,8 +74,5 @@ migrate: .install-migrate-deps .migrate
 
 .PHONY: test
 test:
-		go test internal/flusher/* -v
-		go test internal/saver/* -v
-		go test internal/utils/* -v
-		go test internal/repo/* -v
-		go test internal/api/* -v
+		go test ./... -v -coverprofile cover.out
+		go tool cover -func cover.out

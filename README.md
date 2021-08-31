@@ -25,7 +25,7 @@ run `docker compose up` from repository root. To create all tables run `make mig
 
 ### Run tests
 
-To run tests execute `make test` from repository root.
+To run tests execute `make test` from repository root. It wil run the tests and print coverage report.
 
 ### To build and run with Docker
 
