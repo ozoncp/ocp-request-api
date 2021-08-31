@@ -38,6 +38,7 @@ var _ = Describe("Flusher", func() {
 		ctx          context.Context
 		mockProm     *mocks.MockMetricsReporter
 		mockProducer *mocks.MockProducer
+		mockSearcher *mocks.MockSearcher
 	)
 
 	ctxType := AnyContextType{}
@@ -47,6 +48,7 @@ var _ = Describe("Flusher", func() {
 		mockRepo = mocks.NewMockRepo(mockCtrl)
 		mockProm = mocks.NewMockMetricsReporter(mockCtrl)
 		mockProducer = mocks.NewMockProducer(mockCtrl)
+		mockSearcher = mocks.NewMockSearcher(mockCtrl)
 		ctx = context.Background()
 	})
 
@@ -62,6 +64,7 @@ var _ = Describe("Flusher", func() {
 				mockProm,
 				mockProducer,
 				opentracing.NoopTracer{},
+				mockSearcher,
 			)
 			ctx = context.Background()
 		})
@@ -253,6 +256,60 @@ var _ = Describe("Flusher", func() {
 			resp, err := requestApi.ListRequestV1(
 				ctx, &desc.ListRequestsV1Request{
 					Offset: offset, Limit: limit,
+				},
+			)
+
+			req := make([]*desc.Request, 0, len(requests))
+			for _, r := range requests {
+				req = append(req, &desc.Request{
+					Id:     r.Id,
+					UserId: r.UserId,
+					Type:   r.Type,
+					Text:   r.Text,
+				})
+			}
+
+			Expect(resp).
+				To(Equal(&desc.ListRequestsV1Response{
+					Requests: req,
+				}))
+
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("Full text search", func() {
+			offset, limit := uint64(10), uint64(100)
+			searchQuery := "hey"
+			requests := []models.Request{
+				{1, 100, 1000, "one"},
+				{2, 200, 2000, "two"},
+				{3, 300, 3000, "three"},
+			}
+			mockProm.EXPECT().
+				IncList(uint(1), "ListRequestV1").
+				MaxTimes(1).
+				MinTimes(1)
+
+			// repo is not get called in that case
+			mockRepo.EXPECT().
+				List(ctxType, gomock.Any(), gomock.Any()).
+				MaxTimes(0)
+
+			// but search backend instead
+			mockSearcher.EXPECT().
+				Search(ctxType, searchQuery, limit, offset).
+				Return(requests, nil).
+				MaxTimes(1).
+				MinTimes(1)
+
+			mockProducer.EXPECT().
+				Send(gomock.Any()).
+				MaxTimes(3).
+				MinTimes(3)
+
+			resp, err := requestApi.ListRequestV1(
+				ctx, &desc.ListRequestsV1Request{
+					Offset: offset, Limit: limit, SearchQuery: searchQuery,
 				},
 			)
 

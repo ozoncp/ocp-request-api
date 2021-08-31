@@ -1,0 +1,8 @@
+general:
+  write_batch_size: 100
+db:
+  dsn: "postgres://postgres:12345@localhost:5432/postgres?sslmode=disable"
+kafka:
+  brokers: "localhost:9094"
+jaeger:
+  agent_host_port: "localhost:6831"

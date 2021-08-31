@@ -20,23 +20,34 @@ cd ocp-request-api
 make build
 ```
 
-The compiled binary placed at `bin/ocp-request-api`.
-To start a local database and other services run `docker compose up` from repository root. To create all tables run `make migrate`.
+The compiled binary placed at `bin/ocp-request-api`. To start a local database and other services
+run `docker compose up` from repository root. To create all tables run `make migrate`.
 
 ### Run tests
 
-To run tests execute `make test` from repository root.
-
+To run tests execute `make test` from repository root. It wil run the tests and print coverage report.
 
 ### To build and run with Docker
 
 - Build docker image `docker build . -t ocp-request-api`
-- Run `docker run -v "OCP_REQUEST_DSN=<pgsql dsn>" -v "OCP_REQUEST_BATCH_SIZE=1000" -v "OCP_KAFKA_BROKERS=kafka:9094" -v "OCP_REQUEST_JAEGER_HOST_PORT=jaeger:6831"  -p 82:82 ocp-request-api`
+-
+Run `docker run -v <path to config>.yaml:/root/config.yaml  -p 82:82 ocp-request-api /root/ocp-request-api -c config.yaml`
 
-### ENV variables
+### Config
 
-- `OCP_REQUEST_DSN` - defines connection to Postresql (in form of Golang's sql DSN). 
-- `OCP_REQUEST_BATCH_SIZE` - Controls batch size of multi create endpoint.
-- `OCP_KAFKA_BROKERS` - A comma separate list of Kafka brokers addresses (e.g. host:ip,host:ip)
-- `OCP_REQUEST_JAEGER_HOST_PORT` - Jaeger host and port (e.g. host:ip)
+See below the config example:
+
+```yaml
+general:
+  write_batch_size: 100 // Controls batch size of multi create endpoint.
+db:
+  dsn: "dsds" // defines connection to Postresql (in form of Golang's sql DSN).
+kafka:
+  brokers: localhost:9094  // A comma separate list of Kafka brokers addresses (e.g. host:ip,host:ip)
+jaeger:
+  agent_host_port: localhost:6831 // Jaeger host and port (e.g. host:ip)
+
+```
+
+The config can be overridden via OCP_REQUEST_<config value path> prefixed env variables. e.g OCP_REQUEST_JAEGER_AGENT_HOST_PORT=localhost:6831 
 

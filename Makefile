@@ -9,15 +9,7 @@ build: vendor-proto .generate .build
 .generate:
 		mkdir -p swagger
 		mkdir -p pkg/ocp-request-api
-		protoc -I vendor.protogen \
-				--go_out=pkg/ocp-request-api --go_opt=paths=import \
-				--go-grpc_out=pkg/ocp-request-api --go-grpc_opt=paths=import \
-				--grpc-gateway_out=pkg/ocp-request-api \
-				--grpc-gateway_opt=logtostderr=true \
-				--grpc-gateway_opt=paths=import \
-				--validate_out lang=go:pkg/ocp-request-api \
-				--swagger_out=allow_merge=true,merge_file_name=api:swagger \
-				api/ocp-request-api/ocp-request-api.proto
+		buf generate api/ocp-request-api
 		mv pkg/ocp-request-api/github.com/ozoncp/ocp-request-api/pkg/ocp-request-api/* pkg/ocp-request-api/
 		rm -rf pkg/ocp-request-api/github.com
 		mkdir -p cmd/ocp-request-api
@@ -82,8 +74,5 @@ migrate: .install-migrate-deps .migrate
 
 .PHONY: test
 test:
-		go test internal/flusher/* -v
-		go test internal/saver/* -v
-		go test internal/utils/* -v
-		go test internal/repo/* -v
-		go test internal/api/* -v
+		go test ./... -v -coverprofile cover.out
+		go tool cover -func cover.out

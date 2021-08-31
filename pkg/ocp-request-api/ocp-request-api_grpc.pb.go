@@ -293,5 +293,5 @@ var OcpRequestApi_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/ocp-request-api/ocp-request-api.proto",
+	Metadata: "ocp-request-api.proto",
 }

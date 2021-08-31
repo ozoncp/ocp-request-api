@@ -62,6 +62,7 @@ service OcpRequestApi {
 message ListRequestsV1Request {
   uint64 limit = 1 [(validate.rules).uint64 = {gt: 0, lte: 10000}];
   uint64 offset = 2 [(validate.rules).uint64.gte = 0];
+  string searchQuery = 3;
 }
 
 // A result of ListRequestV1. Contains a list of Requests,

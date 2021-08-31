@@ -7,6 +7,7 @@ import (
 
 type Producer interface {
 	Send(msg ...EventMsg)
+	Close() error
 }
 
 // NewProducer Returns new kafka producer
@@ -40,4 +41,10 @@ func (p *producer) Send(msgs ...EventMsg) {
 	if err != nil {
 		log.Error().Msgf("failed to send messages to Kafka: %v", err)
 	}
+}
+
+// Close closes makes sure all send requests are completed
+// and closes producer and underlying client.
+func (p *producer) Close() error {
+	return p.kafkaProducer.Close()
 }

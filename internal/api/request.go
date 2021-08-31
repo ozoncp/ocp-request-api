@@ -9,6 +9,7 @@ import (
 	"github.com/ozoncp/ocp-request-api/internal/models"
 	"github.com/ozoncp/ocp-request-api/internal/producer"
 	repository "github.com/ozoncp/ocp-request-api/internal/repo"
+	"github.com/ozoncp/ocp-request-api/internal/search"
 	"github.com/ozoncp/ocp-request-api/internal/utils"
 	desc "github.com/ozoncp/ocp-request-api/pkg/ocp-request-api"
 	"github.com/rs/zerolog/log"
@@ -22,6 +23,7 @@ func NewRequestApi(r repository.Repo,
 	metricsReporter metrics.MetricsReporter,
 	producer producer.Producer,
 	tracer opentracing.Tracer,
+	searcher search.Searcher,
 ) *RequestAPI {
 	return &RequestAPI{
 		repo:      r,
@@ -29,6 +31,7 @@ func NewRequestApi(r repository.Repo,
 		metrics:   metricsReporter,
 		producer:  producer,
 		tracer:    tracer,
+		searcher:  searcher,
 	}
 }
 
@@ -39,6 +42,7 @@ type RequestAPI struct {
 	metrics   metrics.MetricsReporter
 	producer  producer.Producer
 	tracer    opentracing.Tracer
+	searcher  search.Searcher
 }
 
 type validator interface {
@@ -54,7 +58,16 @@ func (r *RequestAPI) ListRequestV1(ctx context.Context, req *desc.ListRequestsV1
 	if err := r.validateAndSendErrorEvent(ctx, req, producer.ReadEvent); err != nil {
 		return nil, err
 	}
-	requests, err := r.repo.List(ctx, req.Limit, req.Offset)
+	var (
+		requests []models.Request
+		err      error
+	)
+
+	if req.SearchQuery != "" { // ideally would move search to a separate endpoint, so it's easier to extend
+		requests, err = r.searcher.Search(ctx, req.SearchQuery, req.Limit, req.Offset)
+	} else {
+		requests, err = r.repo.List(ctx, req.Limit, req.Offset)
+	}
 
 	if err != nil {
 		log.Error().
